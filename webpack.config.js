@@ -1,15 +1,13 @@
-const path = require("path");
-
 module.exports = {
 	entry: "./src/contactUs.jsx",
 	output: {
-		filename: "contactUs.js",
+		filename: "contactUs.js"
 	},
 	module: {
 		rules: [
 			// BABEL JS Loader
 			{
-				test: /\.jsx?$/,
+				test: /\.js?/,
 				exclude: [/node_modules/],
 				use: [
 					{

@@ -12,6 +12,7 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"react-maskedinput": "^4.0.1",
 		"react-phone-number-input": "^2.3.2"
 	},
 	"devDependencies": {
