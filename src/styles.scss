@@ -1,0 +1,13 @@
+.required_indicator {
+	color: grey;
+	font-size: 0.8em;
+}
+
+.vertical-align {
+	display: flex;
+	align-items: center;
+}
+
+button, input, select, textarea {
+	line-height: initial;
+}

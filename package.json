@@ -1,17 +1,62 @@
 {
-  "name": "contactUs",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-react-app": "^3.1.2",
-    "react-phone-number-input": "^2.3.2"
-  }
+	"name": "contactUs",
+	"version": "1.0.0",
+	"description": "A contact form for submitting issues to Apex Innovations customer support.",
+	"main": "index.jsx",
+	"scripts": {
+		"devboxWindows": "npx webpack --watch -p -o X:contactUs/contactUs.js",
+		"devboxMac": "umount ./devbox_mount && rm -rf ./devbox_mount; mkdir ./devbox_mount && mount_smbfs //jeffery@devbox2.apexinnovations.com/www/apexinnovations.com/contactUs ./devbox_mount && npx webpack --watch -p -o devbox_mount/contactUs.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"react-phone-number-input": "^2.3.2"
+	},
+	"devDependencies": {
+		"@babel/cli": "^7.2.3",
+		"@babel/core": "^7.2.2",
+		"@babel/plugin-proposal-class-properties": "^7.3.0",
+		"@babel/plugin-proposal-decorators": "^7.3.0",
+		"@babel/plugin-transform-flow-strip-types": "^7.2.3",
+		"@babel/plugin-transform-runtime": "^7.2.0",
+		"@babel/preset-env": "^7.3.1",
+		"@babel/preset-react": "^7.0.0",
+		"@babel/runtime": "^7.3.1",
+		"babel-loader": "^8.0.5",
+		"css-loader": "^2.1.0",
+		"node-sass": "^4.11.0",
+		"react": "^16.7.0",
+		"react-dom": "^16.7.0",
+		"sass-loader": "^7.1.0",
+		"style-loader": "^0.23.1",
+		"webpack": "^4.29.0",
+		"webpack-cli": "^3.2.1"
+	},
+	"babel": {
+		"presets": [
+			"@babel/preset-env",
+			"@babel/preset-react"
+		],
+		"plugins": [
+			"@babel/plugin-transform-flow-strip-types",
+			[
+				"@babel/plugin-proposal-decorators",
+				{
+					"legacy": true
+				}
+			],
+			[
+				"@babel/plugin-proposal-class-properties",
+				{
+					"loose": true
+				}
+			],
+			"@babel/plugin-transform-regenerator",
+			"@babel/plugin-transform-async-to-generator",
+			"@babel/plugin-transform-runtime"
+		],
+		"sourceMaps": true
+	}
 }
