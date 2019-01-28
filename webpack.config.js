@@ -1,13 +1,19 @@
+const webpack = require("webpack");
+
 module.exports = {
 	entry: "./src/contactUs.jsx",
 	output: {
 		filename: "contactUs.js"
 	},
+	plugins: [
+		// Ignore all locale files of moment.js
+		new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
+	],
 	module: {
 		rules: [
 			// BABEL JS Loader
 			{
-				test: /\.js?/,
+				test: /\.(js|jsx)$/,
 				exclude: [/node_modules/],
 				use: [
 					{

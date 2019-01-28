@@ -5,13 +5,16 @@
 	"main": "index.jsx",
 	"scripts": {
 		"devboxWindows": "npx webpack --watch -p -o X:contactUs/contactUs.js",
-		"devboxMac": "umount ./devbox_mount && rm -rf ./devbox_mount; mkdir ./devbox_mount && mount_smbfs //jeffery@devbox2.apexinnovations.com/www/apexinnovations.com/contactUs ./devbox_mount && npx webpack --watch -p -o devbox_mount/contactUs.js",
+		"devboxMac": "mkdir ./devbox_mount && mount_smbfs //jeffery@devbox2.apexinnovations.com/www/apexinnovations.com/contactUs ./devbox_mount && npx webpack --watch -p -o devbox_mount/contactUs.js && umount ./devbox_mount && rm -rf ./devbox_mount",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"email-validator": "^2.0.4",
+		"moment-timezone": "^0.5.23",
+		"react-fontawesome": "^1.6.1",
 		"react-maskedinput": "^4.0.1",
 		"react-phone-number-input": "^2.3.2"
 	},
@@ -27,6 +30,7 @@
 		"@babel/runtime": "^7.3.1",
 		"babel-loader": "^8.0.5",
 		"css-loader": "^2.1.0",
+		"json-loader": "^0.5.7",
 		"node-sass": "^4.11.0",
 		"react": "^16.7.0",
 		"react-dom": "^16.7.0",
