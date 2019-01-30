@@ -2,10 +2,14 @@
 
 // import React from "react";
 // import ReactDOM from "react-dom";
+import Button from "react-bootstrap/Button";
 import MaskedInput from "react-maskedinput";
 import { validate as validateEmail } from "email-validator";
 import moment from "moment-timezone/builds/moment-timezone-with-data-2012-2022.min";
+import "font-awesome/css/font-awesome.css";
 import FontAwesomeIcon from "react-fontawesome";
+import decode from "unescape";
+// import { hasFlashPlayerVersion } from "swfobject";
 
 import "./styles.scss";
 
@@ -17,14 +21,14 @@ class ContactUs extends React.Component {
 
 		this.problemCategories = [
 			{
-				key: "products",
-				title: "Products",
+				key: "courses",
+				title: "A Course",
 				icon: "archive"
 			},
 			{
 				key: "account",
 				title: "My Account",
-				icon: "user"
+				icon: "user-circle"
 			},
 			{
 				key: "other",
@@ -79,9 +83,7 @@ class ContactUs extends React.Component {
 							key={"container_" + key}
 							className={component.state.contactPreference === this.key ? "" : "hidden"}
 						>
-							<label key={"label_" + key} className="tiny">
-								Please provide a email address where we can reach you.
-							</label>
+							<label key={"label_" + key}>Please provide a email address where we can reach you.</label>
 							<input
 								key={"input_" + key}
 								type="email"
@@ -103,13 +105,8 @@ class ContactUs extends React.Component {
 
 	reset() {
 		this.state = {
-			notices: ["We ain't here right now."],
-			faqs: [
-				{
-					content: "What is my provider number?",
-					url: "apexinnovations.com/faqs#provider"
-				}
-			],
+			notices: [],
+			commonQuestions: [],
 			firstName: "",
 			lastName: "",
 			contactPreference: _.find(this.contactPreferences, preference => {
@@ -121,11 +118,58 @@ class ContactUs extends React.Component {
 			description: "",
 			emailAddress: "",
 			phoneNumber: "",
+			requestingSupport: false,
 			submitting: false,
 			submitted: false,
 			errors: []
 		};
+
+		this.getNotices();
+		this.getCommonQuestions();
+		this.getCourses();
 	}
+
+	getNotices = () => {
+		fetch("/admin/techSupport/notices", {
+			method: "GET"
+		})
+			.then(response => {
+				return response.json();
+			})
+			.then(data => {
+				this.setState({
+					notices: data
+				});
+			});
+	};
+
+	getCommonQuestions = () => {
+		fetch("/admin/techSupport/commonQuestions", {
+			method: "GET"
+		})
+			.then(response => {
+				return response.json();
+			})
+			.then(data => {
+				this.setState({
+					commonQuestions: data
+				});
+			});
+	};
+
+	getCourses = () => {
+		fetch("/admin/techSupport/products", {
+			method: "GET"
+		})
+			.then(response => {
+				return response.json();
+			})
+			.then(data => {
+				this.setState({
+					availableCourses: data
+				});
+			});
+	};
 
 	getClientInfo() {
 		// https://stackoverflow.com/a/11219680
@@ -189,7 +233,7 @@ class ContactUs extends React.Component {
 			userAgent: navigator.userAgent
 		};
 
-		return _.map(clientInfo, (info, key) => {
+		let browserDescription = _.map(clientInfo, (info, key) => {
 			switch (key) {
 				case "browser":
 					return info;
@@ -201,6 +245,10 @@ class ContactUs extends React.Component {
 					return "";
 			}
 		}).join("");
+
+		// browserDescription += " Flash " + (hasFlashPlayerVersion("11.0") ? "" : "");
+
+		return browserDescription;
 	}
 
 	getContactPreference(key) {
@@ -209,9 +257,33 @@ class ContactUs extends React.Component {
 		});
 	}
 
+	readyForProblemCategory() {
+		return this.state.firstName && this.state.lastName;
+	}
+
+	readyForProblemOverview() {
+		return this.readyForProblemCategory() && this.state.problemCategory;
+	}
+
+	readyForDescription() {
+		return this.readyForProblemOverview() && this.state.problemOverview;
+	}
+
+	readyForContactPreference() {
+		return this.readyForDescription() && this.state.description;
+	}
+
+	readyForSubmit() {
+		return (
+			this.readyForContactPreference() &&
+			this.state.contactPreference &&
+			(this.state.phoneNumber || this.state.emailAddress)
+		);
+	}
+
 	componentDidUpdate(prevProps, prevState) {
 		// any type of request requires problem overview and description
-		let canSubmit = this.state.problemOverview && this.state.description;
+		let canSubmit = this.readyForSubmit();
 
 		switch (this.state.contactPreference) {
 			case "phone":
@@ -239,9 +311,12 @@ class ContactUs extends React.Component {
 		});
 
 		let options = {
+			firstName: this.state.firstName,
+			lastName: this.state.lastName,
 			contactPreference: this.state.contactPreference,
 			problemOverview: this.state.problemOverview,
-			description: this.state.description
+			description: this.state.description,
+			browserInfo: this.getClientInfo()
 		};
 
 		switch (this.state.contactPreference) {
@@ -254,9 +329,6 @@ class ContactUs extends React.Component {
 				options.contactInfo = this.state.emailAddress;
 				break;
 		}
-
-		// gather browser data
-		options.browserInfo = this.getClientInfo();
 
 		fetch("/admin/techSupport/submitTicket", {
 			method: "POST",
@@ -277,22 +349,22 @@ class ContactUs extends React.Component {
 					setTimeout(function() {
 						clearTimeout(this);
 
-						component.reset();
-					}, 2500);
+						// component.reset();
+					}, 1000);
 				}
 			});
 	};
 
 	submitText() {
 		if (this.state.submitting) {
-			return <span>Submitting...</span>;
+			return "Submitting...";
 		}
 
 		if (this.state.submitted) {
-			return <span>Submitted!</span>;
+			return "Submitted!";
 		}
 
-		return <span>Submit</span>;
+		return "Submit";
 	}
 
 	render() {
@@ -303,14 +375,14 @@ class ContactUs extends React.Component {
 				<div className="modal-header">
 					<strong
 						style={{
-							color: "#436194"
+							color: "#D20000"
 						}}
 					>
 						Customer/Technical Support
 					</strong>
-					<button type="button" className="close" data-dismiss="modal">
+					<Button className="close" data-dismiss="modal">
 						<FontAwesomeIcon name="close" />
-					</button>
+					</Button>
 				</div>
 
 				<div className="modal-body">
@@ -318,7 +390,7 @@ class ContactUs extends React.Component {
 					{this.state.notices.map((notice, i) => {
 						return (
 							<div key={"notice_" + i} className="notice">
-								<strong className="fullWidth">Apex Support</strong>
+								<strong className="fullWidth">Support Notice</strong>
 								<label className="fullWidth">{notice}</label>
 								<a
 									onClick={() => {
@@ -335,56 +407,30 @@ class ContactUs extends React.Component {
 						);
 					})}
 
-					{/* Post-Submit Display */}
-					<div
-						className={
-							"text-center section collapsible " +
-							(this.state.submitting || this.state.submitted || this.state.errors.length > 0
-								? ""
-								: "collapsed")
-						}
-					>
-						<FontAwesomeIcon
-							name={() => {
-								if (this.state.submitting) return "spinner";
-								if (this.state.submitted) return "check-circle";
-
-								return "times-circle";
-							}}
-							size="3x"
-							spin={this.state.submitting ? "spin" : ""}
-							style={{
-								color: "#cccccc"
-							}}
-						/>
-
-						{this.state.submitting ? <h2>Submitting your support request.</h2> : ""}
-						{this.state.submitted ? <h2>Your support request was submitted successfully.</h2> : ""}
-						{this.state.errors.length > 0
-							? this.state.errors.map((error, i) => {
-									return <label>{error}</label>;
-							  })
-							: ""}
-					</div>
-
-					{/* Pre-Submit Display */}
-					<div
-						className={
-							"collapsible " +
-							(!(this.state.submitting || this.state.submitted || this.state.errors.length > 0)
-								? ""
-								: "collapsed")
-						}
-					>
-						<div className="helpfulLinks card">
-							<strong>Helpful Links</strong>
+					{/* Initial View */}
+					<div className={this.state.requestingSupport ? "hidden" : ""}>
+						{/* Common Questions */}
+						<div className="commonQuestions card">
+							<strong>Common Questions</strong>
 							<ul>
-								{this.state.faqs.map((faq, i) => {
+								{this.state.commonQuestions.map((commonQuestion, i) => {
 									return (
-										<li key={"faq_item_" + i}>
-											<a key={"faq_" + i} href={faq.url} target="_blank">
-												{faq.content}
-											</a>
+										<li key={"commonQuestion_item_" + i}>
+											<a
+												key={"commonQuestion_title" + i}
+												onClick={() => {
+													this.setState({
+														openedCommonQuestion:
+															this.state.openedCommonQuestion === i ? null : i
+													});
+												}}
+												dangerouslySetInnerHTML={{ __html: decode(commonQuestion.title) }}
+											/>
+											<div
+												key={"commonQuestion_content_" + i}
+												className={this.state.openedCommonQuestion === i ? "" : "hidden"}
+												dangerouslySetInnerHTML={{ __html: decode(commonQuestion.content) }}
+											/>
 										</li>
 									);
 								})}
@@ -393,156 +439,233 @@ class ContactUs extends React.Component {
 
 						<hr />
 
-						{/* First and Last Name */}
 						<div className="row">
-							<strong className="row">Request Support</strong>
-
-							<label
-								style={{
-									paddingTop: "0.5em"
-								}}
-							>
-								First things first: we need to know who you are!
-							</label>
-							<input
-								type="text"
-								autoFocus
-								required
-								maxLength="25"
-								placeholder="First Name"
-								// value={this.currentUser.FirstName}
-								onChange={() => this.setState({ firstName: event.target.value })}
-							/>
-							<input
-								type="text"
-								required
-								maxLength="25"
-								placeholder="Last Name"
-								// value={this.currentUser.LastName}
-								onChange={() => this.setState({ lastName: event.target.value })}
-							/>
-						</div>
-
-						{/* Problem Category Selection */}
-						<div
-							className={
-								"problemCategorySelectionContainer row section collapsible " +
-								(this.state.firstName && this.state.lastName ? "" : "collapsed")
-							}
-						>
-							<label>
-								Thanks, <span>{this.state.firstName}</span>. What are you having trouble with?
-							</label>
-							<div className="problemCategorySelection">
-								{this.problemCategories.map((category, i) => {
-									return (
-										<button
-											key={i}
-											className={
-												"btn btn-default " +
-												(this.state.problemCategory === category.key ? "selected" : "")
-											}
-											onClick={() => this.setState({ problemCategory: category.key })}
-										>
-											<FontAwesomeIcon key={i} name={category.icon} />
-											{category.title}
-										</button>
-									);
-								})}
-							</div>
-						</div>
-
-						{/* Problem Overview */}
-						<div className={"row section collapsible " + (this.state.problemCategory ? "" : "collapsed")}>
-							<label>Problem not listed? No problem. Just give us a brief overview.</label>
-							<input
-								className="fullWidth"
-								value={this.state.problemOverview}
-								onChange={() => this.setState({ problemOverview: event.target.value })}
-								placeholder="Problem overview"
-								type="text"
-							/>
-						</div>
-
-						{/* Description */}
-						<div className={"row section collapsible " + (this.state.problemOverview ? "" : "collapsed")}>
-							<label>Describe the problem you're having as best as you can.</label>
-							<textarea
-								className="fullWidth"
-								value={this.state.description}
-								onChange={() => this.setState({ description: event.target.value })}
-								placeholder="Providing a clear, concise description of the problem you're having helps us to better help you. Be sure to provide any context you think could be relevant. We appreciate you taking the time."
-							/>
-						</div>
-
-						{/* Contact Preference */}
-						<div
-							className={
-								"row section text-center collapsible " + (this.state.description ? "" : "collapsed")
-							}
-						>
-							<hr />
-							<label>How would you like to be contacted?</label>
-
-							{!this.getContactPreference("phone").condition() ? (
-								<span className="tiny" style={{ color: "red" }}>
-									It is currently after hours. You may request a phone call between 4pm and 7am.
-								</span>
-							) : (
-								""
-							)}
-
-							{/* Buttons */}
-							<div className="row section">
-								{this.contactPreferences.map((preference, key) => {
-									return (
-										<FontAwesomeIcon
-											key={"icon_" + key}
-											name={preference.icon}
-											className={
-												"contactSelection " +
-												(this.state.contactPreference === preference.key ? "selected" : "") +
-												" " +
-												(!preference.condition() ? "disabled" : "")
-											}
-											onClick={() => {
-												if (!preference.condition()) return;
-
-												this.setState({
-													contactPreference: preference.key
-												});
-											}}
-										/>
-									);
-								})}
-							</div>
-
-							{/* Controls */}
-							<div className="row section">
-								{this.contactPreferences.map((preference, i) => {
-									if (!preference.condition()) return;
-
-									return preference.control(i);
-								})}
-							</div>
+							<label>Still having trouble?</label>
+							<Button variant="primary" onClick={() => this.setState({ requestingSupport: true })}>
+								<strong>Contact Support</strong>
+							</Button>
 						</div>
 					</div>
-				</div>
 
-				<div className="modal-footer">
-					<span className="tiny secondary-text">All inputs are required.</span>
-					<div>
-						<button
-							type="button"
-							className={"btn " + (this.state.submitting ? "" : "btn-success")}
-							disabled={!this.state.canSubmit ? "disabled" : ""}
-							onClick={this.submitTicket}
+					{/* Request Support View */}
+					<div className={this.state.requestingSupport ? "" : "hidden"}>
+						<div className="row">
+							<Button variant="link" onClick={() => this.setState({ requestingSupport: false })}>
+								<strong>
+									<FontAwesomeIcon name="angle-left" /> Back to help
+								</strong>
+							</Button>
+
+							<strong
+								style={{
+									color: "#666666",
+									marginLeft: "0.4em"
+								}}
+							>
+								Contacting Support
+							</strong>
+						</div>
+
+						{/* Post-Submit Display */}
+						<div
+							className={
+								"text-center section collapsible " +
+								(this.state.submitting || this.state.submitted || this.state.errors.length > 0
+									? ""
+									: "collapsed")
+							}
 						>
-							{submitVerbiage}
-						</button>
-						<button type="button" className="btn btn-default" data-dismiss="modal">
-							Close
-						</button>
+							<FontAwesomeIcon
+								name={(() => {
+									if (this.state.submitting) return "circle-o-notch";
+									if (this.state.submitted) return "check-circle";
+
+									return "times-circle";
+								})()}
+								size="3x"
+								spin={this.state.submitting ? "spin" : ""}
+								style={{
+									color: (() => {
+										if (this.state.submitting) return "#cccccc";
+										if (this.state.submitted) return "green";
+
+										return "red";
+									})()
+								}}
+							/>
+
+							{this.state.submitting ? <p>Submitting your support request.</p> : ""}
+							{this.state.submitted ? <p>Your support request was submitted successfully.</p> : ""}
+							<p className="">
+								{this.state.errors.length > 0
+									? this.state.errors.map((error, i) => {
+											return <label key={"error_" + i}>{error}</label>;
+									  })
+									: ""}
+							</p>
+						</div>
+
+						{/* Pre-Submit Display */}
+						<div
+							className={
+								"collapsible " +
+								(!(this.state.submitting || this.state.submitted || this.state.errors.length > 0)
+									? ""
+									: "collapsed")
+							}
+						>
+							{/* First and Last Name */}
+							<div className="row section">
+								<label>First things first: we need to know who you are!</label>
+								<input
+									type="text"
+									autoFocus
+									required
+									maxLength="25"
+									placeholder="First Name"
+									// value={this.currentUser.FirstName}
+									onChange={() => this.setState({ firstName: event.target.value })}
+								/>
+								<input
+									type="text"
+									required
+									maxLength="25"
+									placeholder="Last Name"
+									// value={this.currentUser.LastName}
+									onChange={() => this.setState({ lastName: event.target.value })}
+								/>
+							</div>
+
+							{/* Problem Category Selection */}
+							<div
+								className={
+									"problemCategorySelectionContainer row section collapsible " +
+									(this.readyForProblemCategory() ? "" : "collapsed")
+								}
+							>
+								<label>
+									Thanks, <span>{this.state.firstName}</span>. What are you having trouble with?
+								</label>
+								<div className="problemCategorySelection">
+									{this.problemCategories.map((category, i) => {
+										return (
+											<Button
+												key={i}
+												variant="danger"
+												active={this.state.problemCategory === category.key ? "active" : ""}
+												onClick={() => this.setState({ problemCategory: category.key })}
+											>
+												<FontAwesomeIcon key={i} name={category.icon} />
+												{category.title}
+											</Button>
+										);
+									})}
+								</div>
+							</div>
+
+							{/* Problem Overview */}
+							<div
+								className={
+									"row section collapsible " + (this.readyForProblemOverview() ? "" : "collapsed")
+								}
+							>
+								<label>Problem not listed? No problem. Just give us a brief overview.</label>
+								<input
+									className="fullWidth"
+									value={this.state.problemOverview}
+									onChange={() => this.setState({ problemOverview: event.target.value })}
+									placeholder="Problem overview"
+									type="text"
+								/>
+							</div>
+
+							{/* Description */}
+							<div
+								className={"row section collapsible " + (this.readyForDescription() ? "" : "collapsed")}
+							>
+								<label>Describe the problem you're having as best as you can.</label>
+								<textarea
+									className="fullWidth"
+									value={this.state.description}
+									onChange={() => this.setState({ description: event.target.value })}
+									placeholder="Providing a clear, concise description of the problem you're having helps us to better help you. Be sure to provide any context you think could be relevant. We appreciate you taking the time."
+								/>
+							</div>
+
+							{/* Contact Preference */}
+							<div
+								className={
+									"row section text-center collapsible " +
+									(this.readyForContactPreference() ? "" : "collapsed")
+								}
+							>
+								<hr />
+								<label>How would you like to be contacted?</label>
+
+								{!this.getContactPreference("phone").condition() ? (
+									<span className="tiny" style={{ color: "red" }}>
+										It is currently after hours. You may request a phone call between 4pm and 7am.
+									</span>
+								) : (
+									""
+								)}
+
+								{/* Buttons */}
+								<div className="row section">
+									{this.contactPreferences.map((preference, key) => {
+										return (
+											<FontAwesomeIcon
+												key={"icon_" + key}
+												name={preference.icon}
+												className={
+													"contactSelection " +
+													(this.state.contactPreference === preference.key
+														? "selected"
+														: "") +
+													" " +
+													(!preference.condition() ? "disabled" : "")
+												}
+												onClick={() => {
+													if (!preference.condition()) return;
+
+													this.setState({
+														contactPreference: preference.key
+													});
+												}}
+											/>
+										);
+									})}
+								</div>
+
+								{/* Controls */}
+								<div className="row section">
+									{this.contactPreferences.map((preference, i) => {
+										if (!preference.condition()) return;
+
+										return preference.control(i);
+									})}
+								</div>
+							</div>
+
+							{/* Submit or Cancel */}
+							<div
+								className={
+									"row section collapsible flexed " + (this.readyForSubmit() ? "" : "collapsed")
+								}
+							>
+								<span className="tiny secondary-text">All inputs are required.</span>
+								<div>
+									<Button variant="outline-danger">Cancel</Button>
+									<Button
+										className={"btn " + (this.state.submitting ? "" : "btn-success")}
+										disabled={!this.state.canSubmit ? "disabled" : ""}
+										onClick={this.submitTicket}
+									>
+										{submitVerbiage}
+									</Button>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

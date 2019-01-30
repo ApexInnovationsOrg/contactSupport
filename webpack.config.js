@@ -1,4 +1,5 @@
 const webpack = require("webpack");
+const ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 module.exports = {
 	entry: "./src/contactUs.jsx",
@@ -51,6 +52,29 @@ module.exports = {
 			{
 				test: /\.(sass|scss)$/,
 				use: ["style-loader", "css-loader", "sass-loader"]
+			},
+			// Font Awesome Loader
+			// the url-loader uses DataUrls.
+			// the file-loader emits files.
+			{
+				test: /\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+				// Limiting the size of the woff fonts breaks font-awesome ONLY for the extract text plugin
+				// loader: "url?limit=10000"
+				loader: "url-loader",
+				options: {
+					name: "[name].[ext]",
+					outputPath: "../fonts/",
+					publicPath: "/fonts"
+				}
+			},
+			{
+				test: /\.(ttf|eot|svg)(\?[\s\S]+)?$/,
+				loader: "file-loader",
+				options: {
+					name: "[name].[ext]",
+					outputPath: "../fonts/",
+					publicPath: "/fonts"
+				}
 			}
 		]
 	}
