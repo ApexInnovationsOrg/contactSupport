@@ -1,10 +1,11 @@
 "use strict";
 
-// import React from "react";
-// import ReactDOM from "react-dom";
+import React from "react";
+import ReactDOM from "react-dom";
 import Button from "react-bootstrap/Button";
 import MaskedInput from "react-maskedinput";
 import { validate as validateEmail } from "email-validator";
+import _ from "lodash";
 import moment from "moment-timezone/builds/moment-timezone-with-data-2012-2022.min";
 import "font-awesome/css/font-awesome.css";
 import FontAwesomeIcon from "react-fontawesome";
@@ -42,6 +43,8 @@ class ContactUs extends React.Component {
 				key: "phone",
 				title: "Phone",
 				icon: "phone",
+				actionHeader: "We'll call you",
+				actionLabel: "within five minutes.",
 				condition: () => {
 					let hoursRightNow = moment()
 						.tz("America/Chicago")
@@ -74,6 +77,8 @@ class ContactUs extends React.Component {
 				key: "email",
 				title: "Email",
 				icon: "envelope",
+				actionHeader: "We'll email you",
+				actionLabel: "within five minutes.",
 				condition: () => {
 					return true;
 				},
@@ -83,7 +88,7 @@ class ContactUs extends React.Component {
 							key={"container_" + key}
 							className={component.state.contactPreference === this.key ? "" : "hidden"}
 						>
-							<label key={"label_" + key}>Please provide a email address where we can reach you.</label>
+							<label key={"label_" + key}>Please provide an email address where we can reach you.</label>
 							<input
 								key={"input_" + key}
 								type="email"
@@ -99,24 +104,15 @@ class ContactUs extends React.Component {
 			}
 		];
 
-		this.reset();
-		// this.handleChange = this.handleChange.bind(this);
-	}
-
-	reset() {
-		this.state = {
-			notices: [],
-			commonQuestions: [],
-			firstName: "",
-			lastName: "",
-			contactPreference: _.find(this.contactPreferences, preference => {
-				return preference.condition();
-			}).key,
+		this.defaultState = {
+			firstName: _.get(user, "firstName") || "",
+			lastName: _.get(user, "lastName") || "",
+			contactPreference: "",
 			problemCategory: null,
 			canSubmit: false,
 			problemOverview: "",
 			description: "",
-			emailAddress: "",
+			emailAddress: _.get(user, "email") || "",
 			phoneNumber: "",
 			requestingSupport: false,
 			submitting: false,
@@ -124,12 +120,21 @@ class ContactUs extends React.Component {
 			errors: []
 		};
 
+		this.state = _.assignIn({}, this.defaultState);
+		// this.handleChange = this.handleChange.bind(this);
+
 		this.getNotices();
 		this.getCommonQuestions();
 		this.getCourses();
 	}
 
+	reset() {
+		this.setState(this.defaultState);
+	}
+
 	getNotices = () => {
+		this.state.notices = [];
+
 		fetch("/admin/techSupport/notices", {
 			method: "GET"
 		})
@@ -144,6 +149,8 @@ class ContactUs extends React.Component {
 	};
 
 	getCommonQuestions = () => {
+		this.state.commonQuestions = [];
+
 		fetch("/admin/techSupport/commonQuestions", {
 			method: "GET"
 		})
@@ -158,6 +165,8 @@ class ContactUs extends React.Component {
 	};
 
 	getCourses = () => {
+		this.state.availableCourses = [];
+
 		fetch("/admin/techSupport/products", {
 			method: "GET"
 		})
@@ -277,7 +286,8 @@ class ContactUs extends React.Component {
 		return (
 			this.readyForContactPreference() &&
 			this.state.contactPreference &&
-			(this.state.phoneNumber || this.state.emailAddress)
+			((this.state.contactPreference === "phone" && this.state.phoneNumber) ||
+				(this.state.contactPreference === "email" && this.state.emailAddress))
 		);
 	}
 
@@ -341,7 +351,7 @@ class ContactUs extends React.Component {
 				this.setState({
 					submitting: false,
 					submitted: data.success,
-					errors: data.errors
+					errors: _.get(data, "errors") || []
 				});
 
 				// auto-closing on successful submission
@@ -352,6 +362,13 @@ class ContactUs extends React.Component {
 						// component.reset();
 					}, 1000);
 				}
+			})
+			.catch(error => {
+				this.setState({
+					submitting: false,
+					submitted: false,
+					errors: [error.message]
+				});
 			});
 	};
 
@@ -380,9 +397,7 @@ class ContactUs extends React.Component {
 					>
 						Customer/Technical Support
 					</strong>
-					<Button className="close" data-dismiss="modal">
-						<FontAwesomeIcon name="close" />
-					</Button>
+					<FontAwesomeIcon name="close" className="close" data-dismiss="modal" />
 				</div>
 
 				<div className="modal-body">
@@ -410,7 +425,11 @@ class ContactUs extends React.Component {
 					{/* Initial View */}
 					<div className={this.state.requestingSupport ? "hidden" : ""}>
 						{/* Common Questions */}
-						<div className="commonQuestions card">
+						<div
+							className={
+								"commonQuestions card " + (_.isEmpty(this.state.commonQuestions) ? "hidden" : "")
+							}
+						>
 							<strong>Common Questions</strong>
 							<ul>
 								{this.state.commonQuestions.map((commonQuestion, i) => {
@@ -437,33 +456,52 @@ class ContactUs extends React.Component {
 							</ul>
 						</div>
 
-						<hr />
+						<hr className={_.isEmpty(this.state.commonQuestions) ? "hidden" : ""} />
 
 						<div className="row">
 							<label>Still having trouble?</label>
-							<Button variant="primary" onClick={() => this.setState({ requestingSupport: true })}>
-								<strong>Contact Support</strong>
+							<Button variant="secondary" onClick={() => this.setState({ requestingSupport: true })}>
+								Contact Support
 							</Button>
 						</div>
 					</div>
 
 					{/* Request Support View */}
 					<div className={this.state.requestingSupport ? "" : "hidden"}>
-						<div className="row">
-							<Button variant="link" onClick={() => this.setState({ requestingSupport: false })}>
-								<strong>
-									<FontAwesomeIcon name="angle-left" /> Back to help
-								</strong>
+						<div className="row valign-wrapper flexed">
+							<Button
+								style={{
+									color: "#d20000"
+								}}
+								variant="link"
+								onClick={() => {
+									this.reset();
+								}}
+							>
+								<FontAwesomeIcon name="angle-left" /> Back
 							</Button>
 
 							<strong
 								style={{
-									color: "#666666",
+									fontSize: "0.9em",
+									color: "#444444",
 									marginLeft: "0.4em"
 								}}
 							>
 								Contacting Support
 							</strong>
+
+							<Button
+								style={{
+									visibility: "hidden",
+									pointerEvents: "none",
+									color: "#d20000"
+								}}
+								variant="link"
+								onClick={() => this.setState({ requestingSupport: false })}
+							>
+								<FontAwesomeIcon name="angle-left" /> Back
+							</Button>
 						</div>
 
 						{/* Post-Submit Display */}
@@ -487,22 +525,31 @@ class ContactUs extends React.Component {
 								style={{
 									color: (() => {
 										if (this.state.submitting) return "#cccccc";
-										if (this.state.submitted) return "green";
+										if (this.state.submitted) return "#40a138";
 
-										return "red";
+										return "#D20000";
 									})()
 								}}
 							/>
 
-							{this.state.submitting ? <p>Submitting your support request.</p> : ""}
-							{this.state.submitted ? <p>Your support request was submitted successfully.</p> : ""}
-							<p className="">
-								{this.state.errors.length > 0
-									? this.state.errors.map((error, i) => {
-											return <label key={"error_" + i}>{error}</label>;
-									  })
-									: ""}
-							</p>
+							<label className="row section">
+								{/* Submitting... */}
+								{this.state.submitting ? "Submitting your support request." : ""}
+								{/* Submitted */}
+								{this.state.submitted ? "Your support request was submitted successfully." : ""}
+								{/* Error */}
+								<span
+									style={{
+										color: "#d20000"
+									}}
+								>
+									{this.state.errors.length > 0
+										? this.state.errors.map((error, i) => {
+												return <label key={"error_" + i}>{error}</label>;
+										  })
+										: ""}
+								</span>
+							</label>
 						</div>
 
 						{/* Pre-Submit Display */}
@@ -523,7 +570,7 @@ class ContactUs extends React.Component {
 									required
 									maxLength="25"
 									placeholder="First Name"
-									// value={this.currentUser.FirstName}
+									value={this.state.firstName}
 									onChange={() => this.setState({ firstName: event.target.value })}
 								/>
 								<input
@@ -531,7 +578,7 @@ class ContactUs extends React.Component {
 									required
 									maxLength="25"
 									placeholder="Last Name"
-									// value={this.currentUser.LastName}
+									value={this.state.lastName}
 									onChange={() => this.setState({ lastName: event.target.value })}
 								/>
 							</div>
@@ -551,7 +598,7 @@ class ContactUs extends React.Component {
 										return (
 											<Button
 												key={i}
-												variant="danger"
+												variant="secondary"
 												active={this.state.problemCategory === category.key ? "active" : ""}
 												onClick={() => this.setState({ problemCategory: category.key })}
 											>
@@ -595,7 +642,7 @@ class ContactUs extends React.Component {
 							{/* Contact Preference */}
 							<div
 								className={
-									"row section text-center collapsible " +
+									"row text-center collapsible " +
 									(this.readyForContactPreference() ? "" : "collapsed")
 								}
 							>
@@ -603,36 +650,63 @@ class ContactUs extends React.Component {
 								<label>How would you like to be contacted?</label>
 
 								{!this.getContactPreference("phone").condition() ? (
-									<span className="tiny" style={{ color: "red" }}>
+									<p
+										className={"tiny " + (this.state.contactPreference ? "hidden" : "")}
+										style={{
+											color: "#d20000",
+											marginBottom: "0.4em"
+										}}
+									>
 										It is currently after hours. You may request a phone call between 4pm and 7am.
-									</span>
+									</p>
 								) : (
 									""
 								)}
 
 								{/* Buttons */}
-								<div className="row section">
+								<div className="row valign-wrapper text-center">
 									{this.contactPreferences.map((preference, key) => {
 										return (
-											<FontAwesomeIcon
-												key={"icon_" + key}
-												name={preference.icon}
-												className={
-													"contactSelection " +
-													(this.state.contactPreference === preference.key
-														? "selected"
-														: "") +
-													" " +
-													(!preference.condition() ? "disabled" : "")
-												}
-												onClick={() => {
-													if (!preference.condition()) return;
+											<div key={"contactPreference_" + key} className="valign-wrapper">
+												<FontAwesomeIcon
+													key={"icon_" + key}
+													name={preference.icon}
+													className={
+														"contactSelection " +
+														(this.state.contactPreference === preference.key
+															? "selected"
+															: "") +
+														" " +
+														(!preference.condition() ? "disabled" : "")
+													}
+													onClick={() => {
+														if (!preference.condition()) return;
 
-													this.setState({
-														contactPreference: preference.key
-													});
-												}}
-											/>
+														this.setState({
+															contactPreference: preference.key
+														});
+													}}
+												/>
+												<div
+													className={
+														"text-left " +
+														(this.state.contactPreference === preference.key
+															? ""
+															: "hidden")
+													}
+													style={{
+														marginLeft: "0.4em",
+														paddingRight: "2em"
+													}}
+												>
+													<h3 key={"preferenceActionHeader_" + key}>
+														{preference.actionHeader}
+													</h3>
+													<label key={"preferenceActionLabel_" + key}>
+														{preference.actionLabel}
+													</label>
+												</div>
+											</div>
 										);
 									})}
 								</div>
@@ -648,21 +722,24 @@ class ContactUs extends React.Component {
 							</div>
 
 							{/* Submit or Cancel */}
-							<div
-								className={
-									"row section collapsible flexed " + (this.readyForSubmit() ? "" : "collapsed")
-								}
-							>
-								<span className="tiny secondary-text">All inputs are required.</span>
-								<div>
-									<Button variant="outline-danger">Cancel</Button>
-									<Button
-										className={"btn " + (this.state.submitting ? "" : "btn-success")}
-										disabled={!this.state.canSubmit ? "disabled" : ""}
-										onClick={this.submitTicket}
-									>
-										{submitVerbiage}
-									</Button>
+							<div className={"row collapsible " + (this.readyForSubmit() ? "" : "collapsed")}>
+								<hr />
+
+								<div className="flexed valign-wrapper">
+									<span className="tiny secondary-text">All inputs are required.</span>
+									<div>
+										<Button variant="outline-danger" onClick={() => this.reset()}>
+											Cancel
+										</Button>
+
+										<Button
+											variant="secondary"
+											disabled={!this.state.canSubmit ? "disabled" : ""}
+											onClick={this.submitTicket}
+										>
+											{submitVerbiage}
+										</Button>
+									</div>
 								</div>
 							</div>
 						</div>

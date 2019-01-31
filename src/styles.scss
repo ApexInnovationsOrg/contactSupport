@@ -1,11 +1,38 @@
 $red: #D20000;
-$blue: rgb(36, 72, 95);
-$green: rgb(64, 161, 56);
+$blue: #24485f;
+$green: #40a138;
+
 
 .contactUsContainer {
 	font-size: 1.7em;
 	margin: 0.5em;
 	
+	h3 {
+		line-height: 0.8em;
+	}
+	
+	.row {
+		&:before {
+			content: none;
+		}
+		&:after {
+			content: none;
+		}
+	}
+	.flexed {
+		display: flex !important;
+		justify-content: space-between;
+	}
+	
+	.valign-wrapper {
+		display: flex !important;
+		align-items: center;
+
+		&.text-center {
+			justify-content: center;
+		}
+	}
+
 	*:not(.fa) {
 		font-family: Arial, Helvetica, sans-serif !important;
 		line-height: 1.1em;
@@ -191,7 +218,19 @@ $green: rgb(64, 161, 56);
 	}
 
 	button + button {
-		margin-left: 0.3em;
+		margin-left: 0.5em;
+	}
+
+	button {
+		&[class*="outline-"] {
+			background-color: transparent;
+		}
+
+		&.btn-secondary {
+			background-color: #666666 !important;
+			color: white !important;
+		}
+
 	}
 
 	button,
@@ -215,7 +254,7 @@ $green: rgb(64, 161, 56);
 		cursor: pointer;
 
 		&.selected {
-			background-color: lighten($blue, 20%);
+			background-color: $red;
 		}
 
 		&.disabled {
