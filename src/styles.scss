@@ -7,22 +7,26 @@ $green: #40a138;
 	font-size: 1.7em;
 	margin: 0.5em;
 	
-	h3 {
-		line-height: 0.8em;
+	*:not(.fa) {
+		font-family: Arial, Helvetica, sans-serif !important;
 	}
 	
+	h3 {
+		line-height: 0.8em;
+	}	
+
 	.row {
 		&:before {
 			content: none;
-		}
+		}	
 		&:after {
 			content: none;
-		}
-	}
+		}	
+	}	
 	.flexed {
 		display: flex !important;
 		justify-content: space-between;
-	}
+	}	
 	
 	.valign-wrapper {
 		display: flex !important;
@@ -30,13 +34,8 @@ $green: #40a138;
 
 		&.text-center {
 			justify-content: center;
-		}
-	}
-
-	*:not(.fa) {
-		font-family: Arial, Helvetica, sans-serif !important;
-		line-height: 1.1em;
-	}
+		}	
+	}	
 
 	::-webkit-input-placeholder,
 	::-moz-placeholder,
@@ -65,8 +64,9 @@ $green: #40a138;
 
 	.notice {
 		border-radius: 4px;
-		border: 1px solid rgba($red, 0.7);
-		background-color: rgba(lighten($red, 55%), 0.8);
+		border: 1px solid rgba(#888888, 0.7);
+		background-color: rgba(#888888, 0.2);
+		color: #333333;
 
 		> * {
 			display: block;
@@ -91,7 +91,8 @@ $green: #40a138;
 				
 				a {
 					line-height: 1.4em;
-					color: lighten($blue, 10%);
+					color: $red;
+					text-decoration: underline;
 				}
 				div {
 					line-height: 1.2em;
@@ -105,12 +106,12 @@ $green: #40a138;
 	
 	.collapsible {
 		display: block;
-		overflow: hidden;
 		max-height: 1200px;
 		transition: opacity 100ms ease-out, padding 300ms ease-out, margin 300ms ease-out, max-height 300ms ease-out;
-
+		
 		&.collapsed {
 			padding: 0;
+			overflow: hidden;
 			margin: 0;
 			opacity: 0;
 			max-height: 0;
@@ -121,17 +122,17 @@ $green: #40a138;
 		font-size: 0.75em;
 	}
 
-	$problemCategorySelectionTint: $red;
+	$issueSuggestionSelectionTint: $red;
 
-	.problemCategorySelectionContainer {
+	.issueSuggestionSelectionContainer {
 		// border-radius: 8px;
-		// background-color: rgba($problemCategorySelectionTint, 0.9);
+		// background-color: rgba($issueSuggestionSelectionTint, 0.9);
 		// color: white;
 		padding: 0;
 		width: 100%;
 		// overflow: hidden;
 
-		.problemCategorySelection {
+		.issueSuggestionSelection {
 			width: 100%;
 			background-color: rgba(white, 0.95);
 			margin-top: 0.8em;
@@ -153,7 +154,7 @@ $green: #40a138;
 	}
 
 	.section {
-		padding: 1.5em 0 0.2em;
+		padding: 0.75em 0;
 	}
 	
 	.secondary-text {
@@ -163,7 +164,6 @@ $green: #40a138;
 	label {
 		cursor: default;
 		display: block;
-		color: #666666;
 		line-height: 1.1em;
 		font-weight: normal;
 		font-size: 0.85em;
@@ -209,28 +209,30 @@ $green: #40a138;
 	}
 
 	button {
+		margin-left: 0.25em;
+		margin-right: 0.25em;
 		padding: 0.65em 1em !important;
 		font-size: 0.8em;
 
-		.fa {
-			margin-right: 0.4em;
+		&.active {
+			color: rgba(white, 0.5);
 		}
-	}
 
-	button + button {
-		margin-left: 0.5em;
-	}
-
-	button {
 		&[class*="outline-"] {
 			background-color: transparent;
 		}
-
+		
 		&.btn-secondary {
 			background-color: #666666 !important;
 			color: white !important;
 		}
 
+		.fa:first-child:not(:last-child) {
+			margin-right: 0.4em;
+		}
+		.fa:last-child:not(:first-child) {
+			margin-left: 0.4em;
+		}		
 	}
 
 	button,
@@ -263,6 +265,39 @@ $green: #40a138;
 			cursor: not-allowed;
 			opacity: 0.4;
 			transform: scale(0.8);
+		}
+	}
+
+	.dropdown {
+		margin-top: 0.25em;
+	}
+
+	.dropdown-menu {
+		max-height: 300px;
+		overflow-y: auto;
+	}
+
+	.dropdown-item {
+		display: block;
+		padding: 0.8em 0.8em;
+		color: black;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		white-space: nowrap;
+		font-size: 1.1em;
+
+		&:hover {
+			background-color: rgba(black, 0.1);
+		}
+	}
+
+	.dropdown-submenu {
+		position: relative;
+		
+		> .dropdown-menu {
+			top: 0;
+			left: 100%;
+			margin-top: -6px;
 		}
 	}
 }

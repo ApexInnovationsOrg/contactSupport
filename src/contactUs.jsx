@@ -3,6 +3,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import Button from "react-bootstrap/Button";
+import Dropdown from "react-bootstrap/Dropdown";
 import MaskedInput from "react-maskedinput";
 import { validate as validateEmail } from "email-validator";
 import _ from "lodash";
@@ -20,31 +21,13 @@ class ContactUs extends React.Component {
 
 		let component = this;
 
-		this.problemCategories = [
-			{
-				key: "courses",
-				title: "A Course",
-				icon: "archive"
-			},
-			{
-				key: "account",
-				title: "My Account",
-				icon: "user-circle"
-			},
-			{
-				key: "other",
-				title: "Something Else",
-				icon: "question-circle"
-			}
-		];
-
 		this.contactPreferences = [
 			{
 				key: "phone",
 				title: "Phone",
 				icon: "phone",
 				actionHeader: "We'll call you",
-				actionLabel: "within five minutes.",
+				actionLabel: "within 24 hours.",
 				condition: () => {
 					let hoursRightNow = moment()
 						.tz("America/Chicago")
@@ -57,7 +40,9 @@ class ContactUs extends React.Component {
 							key={"container_" + key}
 							className={component.state.contactPreference === this.key ? "" : "hidden"}
 						>
-							<label key={"label_" + key}>Please provide a phone number where we can reach you.</label>
+							<label key={"label_" + key} className="secondary-text">
+								Please provide a phone number where we can reach you.
+							</label>
 							<MaskedInput
 								key={"input_" + key}
 								mask="(111) 111-1111"
@@ -78,7 +63,7 @@ class ContactUs extends React.Component {
 				title: "Email",
 				icon: "envelope",
 				actionHeader: "We'll email you",
-				actionLabel: "within five minutes.",
+				actionLabel: "within 24 hours.",
 				condition: () => {
 					return true;
 				},
@@ -88,7 +73,9 @@ class ContactUs extends React.Component {
 							key={"container_" + key}
 							className={component.state.contactPreference === this.key ? "" : "hidden"}
 						>
-							<label key={"label_" + key}>Please provide an email address where we can reach you.</label>
+							<label key={"label_" + key} className="secondary-text">
+								Please provide an email address where we can reach you.
+							</label>
 							<input
 								key={"input_" + key}
 								type="email"
@@ -105,23 +92,50 @@ class ContactUs extends React.Component {
 		];
 
 		this.defaultState = {
-			firstName: _.get(user, "firstName") || "",
-			lastName: _.get(user, "lastName") || "",
+			firstName: typeof user !== "undefined" ? _.get(user, "firstName") : "",
+			lastName: typeof user !== "undefined" ? _.get(user, "lastName") : "",
 			contactPreference: "",
-			problemCategory: null,
+			selectedIssue: null,
 			canSubmit: false,
+			selectedIssue: null,
 			problemOverview: "",
 			description: "",
-			emailAddress: _.get(user, "email") || "",
+			emailAddress: typeof user !== "undefined" ? _.get(user, "email") : "",
 			phoneNumber: "",
 			requestingSupport: false,
+			doneEditing: false,
 			submitting: false,
 			submitted: false,
 			errors: []
 		};
 
 		this.state = _.assignIn({}, this.defaultState);
-		// this.handleChange = this.handleChange.bind(this);
+
+		this.issueSuggestions = [
+			{ value: "I'm having trouble logging in." },
+			{ value: "I need to update my name and/or email address." },
+			{
+				value: "I need a copy of my certificate(s).",
+				itemLabel: "course",
+				items: []
+			},
+			{
+				value: "I need to sync my score to my LMS.",
+				itemLabel: "course",
+				items: []
+			},
+			{
+				value: "I need a test reset.",
+				itemLabel: "course",
+				items: []
+			},
+			{
+				value: "I'm logged in, but I can't access the course.",
+				itemLabel: "course",
+				items: []
+			},
+			{ value: "Something else..." }
+		];
 
 		this.getNotices();
 		this.getCommonQuestions();
@@ -165,8 +179,6 @@ class ContactUs extends React.Component {
 	};
 
 	getCourses = () => {
-		this.state.availableCourses = [];
-
 		fetch("/admin/techSupport/products", {
 			method: "GET"
 		})
@@ -174,8 +186,11 @@ class ContactUs extends React.Component {
 				return response.json();
 			})
 			.then(data => {
-				this.setState({
-					availableCourses: data
+				// populate items arrays with courses
+				this.issueSuggestions = _.map(this.issueSuggestions, issue => {
+					if (_.get(issue, "items") && issue.itemLabel === "course") issue.items = data;
+
+					return issue;
 				});
 			});
 	};
@@ -271,15 +286,19 @@ class ContactUs extends React.Component {
 	}
 
 	readyForProblemOverview() {
-		return this.readyForProblemCategory() && this.state.problemCategory;
+		return this.readyForProblemCategory() && this.state.selectedIssue;
 	}
 
 	readyForDescription() {
 		return this.readyForProblemOverview() && this.state.problemOverview;
 	}
 
-	readyForContactPreference() {
+	readyForDoneEditing() {
 		return this.readyForDescription() && this.state.description;
+	}
+
+	readyForContactPreference() {
+		return this.readyForDoneEditing() && this.state.doneEditing;
 	}
 
 	readyForSubmit() {
@@ -288,6 +307,26 @@ class ContactUs extends React.Component {
 			this.state.contactPreference &&
 			((this.state.contactPreference === "phone" && this.state.phoneNumber) ||
 				(this.state.contactPreference === "email" && this.state.emailAddress))
+		);
+	}
+
+	compiledDescriptionForSubmitting() {
+		return (
+			"Name: " +
+			this.state.firstName +
+			" " +
+			this.state.lastName +
+			(user.admin === "Y" ? " (Admin)" : "") +
+			"\n\n" +
+			"Issue: " +
+			_.get(this.state.selectedIssue, "value") +
+			"\n\n" +
+			(_.get(this.state.selectedIssue, "itemLabel")
+				? _.capitalize(_.get(this.state.selectedIssue, "itemLabel")) + ": " + this.state.problemOverview
+				: this.state.problemOverview) +
+			"\n\n" +
+			"Description:\n" +
+			this.state.description
 		);
 	}
 
@@ -325,7 +364,7 @@ class ContactUs extends React.Component {
 			lastName: this.state.lastName,
 			contactPreference: this.state.contactPreference,
 			problemOverview: this.state.problemOverview,
-			description: this.state.description,
+			description: this.compiledDescriptionForSubmitting(),
 			browserInfo: this.getClientInfo()
 		};
 
@@ -408,13 +447,13 @@ class ContactUs extends React.Component {
 								<strong className="fullWidth">Support Notice</strong>
 								<label className="fullWidth">{notice}</label>
 								<a
-									onClick={() => {
+									onClick={() =>
 										this.setState({
 											notices: this.state.notices.filter((_value, index) => {
 												return index !== i;
 											})
-										});
-									}}
+										})
+									}
 								>
 									Close message
 								</a>
@@ -437,12 +476,12 @@ class ContactUs extends React.Component {
 										<li key={"commonQuestion_item_" + i}>
 											<a
 												key={"commonQuestion_title" + i}
-												onClick={() => {
+												onClick={() =>
 													this.setState({
 														openedCommonQuestion:
 															this.state.openedCommonQuestion === i ? null : i
-													});
-												}}
+													})
+												}
 												dangerouslySetInnerHTML={{ __html: decode(commonQuestion.title) }}
 											/>
 											<div
@@ -459,9 +498,11 @@ class ContactUs extends React.Component {
 						<hr className={_.isEmpty(this.state.commonQuestions) ? "hidden" : ""} />
 
 						<div className="row">
-							<label>Still having trouble?</label>
+							<label className="secondary-text">Still having trouble?</label>
 							<Button variant="secondary" onClick={() => this.setState({ requestingSupport: true })}>
-								Contact Support
+								<FontAwesomeIcon name="life-ring" />
+								<span>Contact Support</span>
+								<FontAwesomeIcon name="caret-right" />
 							</Button>
 						</div>
 					</div>
@@ -474,9 +515,7 @@ class ContactUs extends React.Component {
 									color: "#d20000"
 								}}
 								variant="link"
-								onClick={() => {
-									this.reset();
-								}}
+								onClick={() => this.reset()}
 							>
 								<FontAwesomeIcon name="angle-left" /> Back
 							</Button>
@@ -532,7 +571,7 @@ class ContactUs extends React.Component {
 								}}
 							/>
 
-							<label className="row section">
+							<label className="row section secondary-text">
 								{/* Submitting... */}
 								{this.state.submitting ? "Submitting your support request." : ""}
 								{/* Submitted */}
@@ -545,7 +584,11 @@ class ContactUs extends React.Component {
 								>
 									{this.state.errors.length > 0
 										? this.state.errors.map((error, i) => {
-												return <label key={"error_" + i}>{error}</label>;
+												return (
+													<label key={"error_" + i} className="secondary-text">
+														{error}
+													</label>
+												);
 										  })
 										: ""}
 								</span>
@@ -561,189 +604,312 @@ class ContactUs extends React.Component {
 									: "collapsed")
 							}
 						>
-							{/* First and Last Name */}
-							<div className="row section">
-								<label>First things first: we need to know who you are!</label>
-								<input
-									type="text"
-									autoFocus
-									required
-									maxLength="25"
-									placeholder="First Name"
-									value={this.state.firstName}
-									onChange={() => this.setState({ firstName: event.target.value })}
-								/>
-								<input
-									type="text"
-									required
-									maxLength="25"
-									placeholder="Last Name"
-									value={this.state.lastName}
-									onChange={() => this.setState({ lastName: event.target.value })}
-								/>
-							</div>
-
-							{/* Problem Category Selection */}
-							<div
-								className={
-									"problemCategorySelectionContainer row section collapsible " +
-									(this.readyForProblemCategory() ? "" : "collapsed")
-								}
-							>
-								<label>
-									Thanks, <span>{this.state.firstName}</span>. What are you having trouble with?
-								</label>
-								<div className="problemCategorySelection">
-									{this.problemCategories.map((category, i) => {
-										return (
-											<Button
-												key={i}
-												variant="secondary"
-												active={this.state.problemCategory === category.key ? "active" : ""}
-												onClick={() => this.setState({ problemCategory: category.key })}
-											>
-												<FontAwesomeIcon key={i} name={category.icon} />
-												{category.title}
-											</Button>
-										);
-									})}
+							{/* Editing Display */}
+							<div className={"collapsible " + (this.state.doneEditing ? "collapsed" : "")}>
+								{/* First and Last Name */}
+								<div className="row section">
+									<label className="secondary-text">
+										First things first: we need to know who you are!
+									</label>
+									<input
+										type="text"
+										autoFocus
+										required
+										maxLength="25"
+										placeholder="First Name"
+										value={this.state.firstName}
+										onChange={() => this.setState({ firstName: event.target.value })}
+									/>
+									<input
+										type="text"
+										required
+										maxLength="25"
+										placeholder="Last Name"
+										value={this.state.lastName}
+										onChange={() => this.setState({ lastName: event.target.value })}
+									/>
 								</div>
-							</div>
 
-							{/* Problem Overview */}
-							<div
-								className={
-									"row section collapsible " + (this.readyForProblemOverview() ? "" : "collapsed")
-								}
-							>
-								<label>Problem not listed? No problem. Just give us a brief overview.</label>
-								<input
-									className="fullWidth"
-									value={this.state.problemOverview}
-									onChange={() => this.setState({ problemOverview: event.target.value })}
-									placeholder="Problem overview"
-									type="text"
-								/>
-							</div>
+								{/* Problem Category Selection */}
+								<div
+									className={
+										"selectedIssueSelectionContainer row section collapsible " +
+										(this.readyForProblemCategory() ? "" : "collapsed")
+									}
+								>
+									<label className="secondary-text">
+										Thanks, <span>{this.state.firstName}</span>. What are you having trouble with?
+									</label>
 
-							{/* Description */}
-							<div
-								className={"row section collapsible " + (this.readyForDescription() ? "" : "collapsed")}
-							>
-								<label>Describe the problem you're having as best as you can.</label>
-								<textarea
-									className="fullWidth"
-									value={this.state.description}
-									onChange={() => this.setState({ description: event.target.value })}
-									placeholder="Providing a clear, concise description of the problem you're having helps us to better help you. Be sure to provide any context you think could be relevant. We appreciate you taking the time."
-								/>
-							</div>
+									<Dropdown>
+										<Dropdown.Toggle variant="secondary">
+											<span>
+												{_.get(this.state.selectedIssue, "value") || "Select an issue..."}
+											</span>
+											<FontAwesomeIcon name="caret-down" />
+										</Dropdown.Toggle>
+										<Dropdown.Menu>
+											{this.issueSuggestions.map((issue, i) => {
+												return (
+													<Dropdown.Item
+														key={"issueItem_" + i}
+														title={issue.value}
+														onClick={() => {
+															this.setState({
+																selectedIssue: issue,
+																problemOverview: ""
+															});
 
-							{/* Contact Preference */}
-							<div
-								className={
-									"row text-center collapsible " +
-									(this.readyForContactPreference() ? "" : "collapsed")
-								}
-							>
-								<hr />
-								<label>How would you like to be contacted?</label>
+															if (!_.get(issue, "items")) {
+																this.setState({
+																	problemOverview: issue.value
+																});
+															}
+														}}
+													>
+														{issue.value}
+													</Dropdown.Item>
+												);
+											})}
+										</Dropdown.Menu>
+									</Dropdown>
 
-								{!this.getContactPreference("phone").condition() ? (
-									<p
-										className={"tiny " + (this.state.contactPreference ? "hidden" : "")}
-										style={{
-											color: "#d20000",
-											marginBottom: "0.4em"
-										}}
+									{_.get(this.state.selectedIssue, "items") && (
+										<Dropdown>
+											<Dropdown.Toggle variant="secondary">
+												<span>
+													{this.state.problemOverview ||
+														"Select a " + this.state.selectedIssue.itemLabel}
+												</span>
+												<FontAwesomeIcon name="caret-down" />
+											</Dropdown.Toggle>
+
+											<Dropdown.Menu>
+												{this.state.selectedIssue.items.map((item, i) => {
+													return (
+														<Dropdown.Item
+															key={"issueItem_" + i}
+															title={item}
+															onClick={() =>
+																this.setState({
+																	problemOverview: item
+																})
+															}
+														>
+															{item}
+														</Dropdown.Item>
+													);
+												})}
+											</Dropdown.Menu>
+										</Dropdown>
+									)}
+								</div>
+
+								{/* Problem Overview */}
+								{/* Only show the problem overview if they selected the "Something else..." option */}
+								{_.get(this.state.selectedIssue, "value") === _.last(this.issueSuggestions).value && (
+									<div
+										className={
+											"row section collapsible " +
+											(this.readyForProblemOverview() ? "" : "collapsed")
+										}
 									>
-										It is currently after hours. You may request a phone call between 4pm and 7am.
-									</p>
-								) : (
-									""
+										<label>Problem not listed? No problem. Just give us a brief overview.</label>
+										<input
+											className="fullWidth"
+											value={this.state.problemOverview}
+											onChange={() => this.setState({ problemOverview: event.target.value })}
+											placeholder="Problem overview"
+											type="text"
+										/>
+									</div>
 								)}
 
-								{/* Buttons */}
-								<div className="row valign-wrapper text-center">
-									{this.contactPreferences.map((preference, key) => {
-										return (
-											<div key={"contactPreference_" + key} className="valign-wrapper">
-												<FontAwesomeIcon
-													key={"icon_" + key}
-													name={preference.icon}
-													className={
-														"contactSelection " +
-														(this.state.contactPreference === preference.key
-															? "selected"
-															: "") +
-														" " +
-														(!preference.condition() ? "disabled" : "")
-													}
-													onClick={() => {
-														if (!preference.condition()) return;
-
-														this.setState({
-															contactPreference: preference.key
-														});
-													}}
-												/>
-												<div
-													className={
-														"text-left " +
-														(this.state.contactPreference === preference.key
-															? ""
-															: "hidden")
-													}
-													style={{
-														marginLeft: "0.4em",
-														paddingRight: "2em"
-													}}
-												>
-													<h3 key={"preferenceActionHeader_" + key}>
-														{preference.actionHeader}
-													</h3>
-													<label key={"preferenceActionLabel_" + key}>
-														{preference.actionLabel}
-													</label>
-												</div>
-											</div>
-										);
-									})}
-								</div>
-
-								{/* Controls */}
-								<div className="row section">
-									{this.contactPreferences.map((preference, i) => {
-										if (!preference.condition()) return;
-
-										return preference.control(i);
-									})}
+								{/* Description */}
+								<div
+									className={
+										"row section collapsible " + (this.readyForDescription() ? "" : "collapsed")
+									}
+								>
+									<label className="secondary-text">
+										Describe the problem you're having as best as you can.
+									</label>
+									<textarea
+										className="fullWidth"
+										value={this.state.description}
+										onChange={() => this.setState({ description: event.target.value })}
+										placeholder="Providing a clear, concise description of the problem you're having helps us to better help you. Be sure to provide any context you think could be relevant. We appreciate you taking the time."
+									/>
+									<div
+										className={
+											"row section text-right collapsible " +
+											(this.readyForDoneEditing() ? "" : "collapsed")
+										}
+									>
+										<Button
+											variant="secondary"
+											onClick={() =>
+												this.setState({
+													doneEditing: true
+												})
+											}
+										>
+											<span>Next</span>
+											<FontAwesomeIcon name="caret-right" />
+										</Button>
+									</div>
 								</div>
 							</div>
 
-							{/* Submit or Cancel */}
-							<div className={"row collapsible " + (this.readyForSubmit() ? "" : "collapsed")}>
-								<hr />
-
-								<div className="flexed valign-wrapper">
-									<span className="tiny secondary-text">All inputs are required.</span>
+							{/* Done Editing Display */}
+							<div className={"collapsible " + (this.state.doneEditing ? "" : "collapsed")}>
+								{/* Request Info */}
+								<div className="row section">
 									<div>
-										<Button variant="outline-danger" onClick={() => this.reset()}>
-											Cancel
-										</Button>
-
+										<label className="tiny secondary-text">Name</label>
+										<label>{this.state.firstName + " " + this.state.lastName}</label>
+									</div>
+									<div className="" style={{ marginTop: "1em" }}>
+										<label className="tiny secondary-text">Issue</label>
+										<label>{_.get(this.state.selectedIssue, "value")}</label>
+									</div>
+									{_.get(this.state.selectedIssue, "items") && (
+										<div style={{ marginTop: "1em" }}>
+											<label className="tiny secondary-text">
+												{_.capitalize(_.get(this.state.selectedIssue, "itemLabel"))}
+											</label>
+											<label>{this.state.problemOverview}</label>
+										</div>
+									)}
+									<div style={{ marginTop: "1em" }}>
+										<label className="tiny secondary-text">Description</label>
+										<label>{this.state.description}</label>
+									</div>
+									<div className="row section text-center">
 										<Button
 											variant="secondary"
-											disabled={!this.state.canSubmit ? "disabled" : ""}
-											onClick={this.submitTicket}
+											onClick={() => this.setState({ doneEditing: false })}
 										>
-											{submitVerbiage}
+											<FontAwesomeIcon name="pencil" />
+											<span>Edit Request</span>
 										</Button>
+									</div>
+								</div>
+
+								{/* Contact Preference */}
+								<div
+									className={
+										"row text-center collapsible " +
+										(this.readyForContactPreference() ? "" : "collapsed")
+									}
+								>
+									<hr />
+									<label className="secondary-text">How would you like to be contacted?</label>
+
+									{!this.getContactPreference("phone").condition() ? (
+										<p
+											className={"tiny " + (this.state.contactPreference ? "hidden" : "")}
+											style={{
+												color: "#d20000",
+												marginBottom: "0.4em"
+											}}
+										>
+											It is currently after hours. You may request a phone call between 4pm and
+											7am.
+										</p>
+									) : (
+										""
+									)}
+
+									{/* Buttons */}
+									<div className="row valign-wrapper text-center">
+										{this.contactPreferences.map((preference, key) => {
+											return (
+												<div key={"contactPreference_" + key} className="valign-wrapper">
+													<FontAwesomeIcon
+														key={"icon_" + key}
+														name={preference.icon}
+														className={
+															"contactSelection " +
+															(this.state.contactPreference === preference.key
+																? "selected"
+																: "") +
+															" " +
+															(!preference.condition() ? "disabled" : "")
+														}
+														onClick={() => {
+															if (!preference.condition()) return;
+
+															this.setState({
+																contactPreference: preference.key
+															});
+														}}
+													/>
+													<div
+														className={
+															"text-left " +
+															(this.state.contactPreference === preference.key
+																? ""
+																: "hidden")
+														}
+														style={{
+															marginLeft: "0.4em",
+															paddingRight: "2em"
+														}}
+													>
+														<h3 key={"preferenceActionHeader_" + key}>
+															{preference.actionHeader}
+														</h3>
+														<label
+															key={"preferenceActionLabel_" + key}
+															className="secondary-text"
+														>
+															{preference.actionLabel}
+														</label>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+
+									{/* Controls */}
+									<div className="row section">
+										{this.contactPreferences.map((preference, i) => {
+											if (!preference.condition()) return;
+
+											return preference.control(i);
+										})}
+									</div>
+								</div>
+
+								{/* Submit or Cancel */}
+								<div className={"row collapsible " + (this.readyForSubmit() ? "" : "collapsed")}>
+									<hr />
+
+									<div className="flexed valign-wrapper">
+										<div />
+										<div>
+											<Button variant="outline-danger" onClick={() => this.reset()}>
+												Cancel
+											</Button>
+
+											<Button
+												variant="success"
+												disabled={!this.state.canSubmit ? "disabled" : ""}
+												onClick={this.submitTicket}
+											>
+												{submitVerbiage}
+											</Button>
+										</div>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
+				</div>
+
+				<div className={"modal-footer " + (this.state.requestingSupport ? "" : "hidden")}>
+					<span className="tiny secondary-text">All inputs are required.</span>
 				</div>
 			</div>
 		);
