@@ -1,15 +1,19 @@
 const webpack = require("webpack");
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 module.exports = {
-	entry: "./src/contactUs.jsx",
+	entry: "./src/index.jsx",
 	output: {
-		filename: "contactUs.js"
+		filename: "contactSupport.js"
 	},
 	plugins: [
 		// Ignore all locale files of moment.js
-		new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
+		new webpack.DefinePlugin({
+			'process.env.NODE_ENV': JSON.stringify('production')
+		}),
 	],
+	optimization: {
+		minimize: true
+	},
 	module: {
 		rules: [
 			// BABEL JS Loader
