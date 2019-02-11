@@ -30,8 +30,7 @@ class ContactUs extends React.Component {
 				actionLabel: "within 10 minutes.",
 				disabledMessage: "Callback assistance is available M-F 8 am - 4 pm CST.",
 				condition: () => {
-					let hoursRightNow = new Date().getHours();
-					return hoursRightNow < 16 && hoursRightNow > 6;
+					return !this.isAfterHours();
 				},
 				control: function(key) {
 					return (
@@ -95,7 +94,12 @@ class ContactUs extends React.Component {
 			key: "phone"
 		});
 		phoneContactPreference.actionLabel =
-			"within " + (phoneContactPreference.condition() ? "10 minutes" : "24 hours") + ".";
+			"within " + (this.isAfterHours() ? "24 hours" : "10 minutes") + ".";
+		
+		let emailContactPreference = lodash.find(this.contactPreferences, {
+			key: "email"
+		});
+		emailContactPreference.actionLabel = "within " + (this.isAfterHours() ? "24 hours" : "an hour") + ".";
 
 		this.defaultState = {
 			firstName: typeof user !== "undefined" ? lodash.get(user, "firstName") : "",
@@ -151,6 +155,11 @@ class ContactUs extends React.Component {
 		this.getNotices();
 		this.getCommonQuestions();
 		this.getCourses();
+	}
+
+	isAfterHours = () => {
+		let hoursRightNow = new Date().getHours();
+		return !(hoursRightNow < 16 && hoursRightNow > 6);
 	}
 
 	reset() {
