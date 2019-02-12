@@ -49,7 +49,7 @@ class ContactUs extends React.Component {
 								required
 								defaultValue={component.state.phoneNumber}
 								autoFocus
-								onChange={(event) => component.setState({ phoneNumber: event.target.value })}
+								onChange={event => component.setState({ phoneNumber: event.target.value })}
 								placeholder="(555) 555-5555"
 							/>
 						</div>
@@ -82,7 +82,7 @@ class ContactUs extends React.Component {
 								pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/"
 								defaultValue={component.state.emailAddress}
 								autoFocus
-								onChange={(event) => component.setState({ emailAddress: event.target.value })}
+								onChange={event => component.setState({ emailAddress: event.target.value })}
 							/>
 						</div>
 					);
@@ -93,9 +93,8 @@ class ContactUs extends React.Component {
 		let phoneContactPreference = lodash.find(this.contactPreferences, {
 			key: "phone"
 		});
-		phoneContactPreference.actionLabel =
-			"within " + (this.isAfterHours() ? "24 hours" : "10 minutes") + ".";
-		
+		phoneContactPreference.actionLabel = "within " + (this.isAfterHours() ? "24 hours" : "10 minutes") + ".";
+
 		let emailContactPreference = lodash.find(this.contactPreferences, {
 			key: "email"
 		});
@@ -160,7 +159,7 @@ class ContactUs extends React.Component {
 	isAfterHours = () => {
 		let hoursRightNow = new Date().getHours();
 		return !(hoursRightNow < 16 && hoursRightNow > 6);
-	}
+	};
 
 	reset() {
 		this.setState(this.defaultState);
@@ -284,18 +283,20 @@ class ContactUs extends React.Component {
 			userAgent: navigator.userAgent
 		};
 
-		let browserDescription = lodash.map(clientInfo, (info, key) => {
-			switch (key) {
-				case "browser":
-					return info;
-				case "majorVersion":
-					return " " + info;
-				case "fullVersion":
-					return " (" + info + ")";
-				default:
-					return "";
-			}
-		}).join("");
+		let browserDescription = lodash
+			.map(clientInfo, (info, key) => {
+				switch (key) {
+					case "browser":
+						return info;
+					case "majorVersion":
+						return " " + info;
+					case "fullVersion":
+						return " (" + info + ")";
+					default:
+						return "";
+				}
+			})
+			.join("");
 
 		var hasFlash = false;
 		try {
@@ -323,7 +324,9 @@ class ContactUs extends React.Component {
 			this.readyForContactPreference() &&
 			this.state.contactPreference &&
 			((this.state.contactPreference === "phone" && this.state.phoneNumber) ||
-				(this.state.contactPreference === "email" && this.state.emailAddress && validateEmail(this.state.emailAddress)))
+				(this.state.contactPreference === "email" &&
+					this.state.emailAddress &&
+					validateEmail(this.state.emailAddress)))
 		);
 	}
 
@@ -359,7 +362,9 @@ class ContactUs extends React.Component {
 			lodash.get(this.state.selectedIssue, "value") +
 			"<br><br>" +
 			(lodash.get(this.state.selectedIssue, "itemLabel")
-				? lodash.capitalize(lodash.get(this.state.selectedIssue, "itemLabel")) + ": " + this.state.problemOverview
+				? lodash.capitalize(lodash.get(this.state.selectedIssue, "itemLabel")) +
+				  ": " +
+				  this.state.problemOverview
 				: this.state.problemOverview) +
 			"<br><br>" +
 			"Description:<br>" +
@@ -821,7 +826,7 @@ class ContactUs extends React.Component {
 													maxLength="25"
 													placeholder="First Name"
 													defaultValue={this.state.firstName}
-													onChange={(event) => this.setState({ firstName: event.target.value })}
+													onChange={event => this.setState({ firstName: event.target.value })}
 												/>
 												<input
 													type="text"
@@ -829,7 +834,7 @@ class ContactUs extends React.Component {
 													maxLength="25"
 													placeholder="Last Name"
 													defaultValue={this.state.lastName}
-													onChange={(event) => this.setState({ lastName: event.target.value })}
+													onChange={event => this.setState({ lastName: event.target.value })}
 												/>
 											</div>
 
@@ -926,7 +931,7 @@ class ContactUs extends React.Component {
 													<input
 														className="fullWidth"
 														defaultValue={this.state.problemOverview}
-														onChange={(event) =>
+														onChange={event =>
 															this.setState({ problemOverview: event.target.value })
 														}
 														placeholder="Problem overview"
@@ -948,7 +953,9 @@ class ContactUs extends React.Component {
 												<textarea
 													className="fullWidth"
 													defaultValue={this.state.description}
-													onChange={(event) => this.setState({ description: event.target.value })}
+													onChange={event =>
+														this.setState({ description: event.target.value })
+													}
 													placeholder="Providing a clear, concise description of the problem you're having helps us to better help you. Be sure to provide any context you think could be relevant. We appreciate you taking the time."
 												/>
 												<div
@@ -987,7 +994,9 @@ class ContactUs extends React.Component {
 												{lodash.get(this.state.selectedIssue, "items") && (
 													<div style={{ marginTop: "1em" }}>
 														<label className="tiny secondary-text">
-															{lodash.capitalize(lodash.get(this.state.selectedIssue, "itemLabel"))}
+															{lodash.capitalize(
+																lodash.get(this.state.selectedIssue, "itemLabel")
+															)}
 														</label>
 														<label>{this.state.problemOverview}</label>
 													</div>
@@ -1017,6 +1026,7 @@ class ContactUs extends React.Component {
 
 												<div className="flexed valign-wrapper">
 													<div />
+
 													<div>
 														<Button variant="outline-danger" onClick={() => this.reset()}>
 															Cancel
@@ -1044,14 +1054,11 @@ class ContactUs extends React.Component {
 								}
 							>
 								<span className="tiny secondary-text">All inputs are required.</span>
-								<span
-									className={
-										"tiny secondary-text " +
-										(this.state.contactPreference === "phone" ? "" : "hidden")
-									}
-								>
-									Or call <a href="tel:866-294-4599 ext. 111">866-294-4599 ext. 111</a> (M-F 8 am - 4
-									pm CST)
+								<span className="tiny secondary-text">
+									{this.state.contactPreference === "phone" && "Or call <a href='tel:866-294-4599 ext. 111'>866-294-4599 ext. 111</a> (M-F 8 am - 4pm CST"}
+
+									{this.state.contactPreference === "email" &&
+										"A copy of this request will be emailed to you."}
 								</span>
 							</div>
 						</div>
@@ -1063,8 +1070,7 @@ class ContactUs extends React.Component {
 }
 
 window.lodash = _.noConflict();
-$(document).on("ready", function () {
-
+$(document).on("ready", function() {
 	ReactDOM.render(
 		<ContactUs />,
 		$("<div/>", {
