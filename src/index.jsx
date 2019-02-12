@@ -402,11 +402,10 @@ class ContactUs extends React.Component {
 		});
 
 		let options = {
-			firstName: this.state.firstName,
-			lastName: this.state.lastName,
+			userName: this.state.firstName + " " + this.state.lastName + (user.admin === "Y" ? " (Admin)" : ""),
 			contactPreference: this.state.contactPreference,
 			problemOverview: this.state.problemOverview,
-			description: this.compiledDescriptionForSubmitting(),
+			description: this.state.description,
 			browserInfo: this.getClientInfo()
 		};
 
