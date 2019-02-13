@@ -1,15 +1,15 @@
 const webpack = require("webpack");
 
 module.exports = {
-	entry: "./src/index.jsx",
+	entry: ["@babel/polyfill", "./src/index.jsx"],
 	output: {
 		filename: "contactSupport.js"
 	},
 	plugins: [
 		// Ignore all locale files of moment.js
 		new webpack.DefinePlugin({
-			'process.env.NODE_ENV': JSON.stringify('production')
-		}),
+			"process.env.NODE_ENV": JSON.stringify("production")
+		})
 	],
 	optimization: {
 		minimize: true
@@ -24,7 +24,17 @@ module.exports = {
 					{
 						loader: "babel-loader",
 						options: {
-							presets: ["@babel/preset-env", "@babel/preset-react"],
+							presets: [
+								[
+									"@babel/preset-env",
+									{
+										targets: {
+											ie: "11"
+										}
+									}
+								],
+								"@babel/preset-react"
+							],
 							plugins: [
 								"@babel/plugin-transform-flow-strip-types",
 								[

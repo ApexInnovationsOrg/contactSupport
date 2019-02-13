@@ -1,5 +1,6 @@
 "use strict";
 
+import fetch from "isomorphic-fetch";
 import React from "react";
 import ReactDOM from "react-dom";
 import Button from "react-bootstrap/Button";
@@ -48,6 +49,7 @@ class ContactUs extends React.Component {
 								pattern="((\(\d{3}\) ?)|(\d{3}-))?\d{3}-\d{4}"
 								required
 								defaultValue={component.state.phoneNumber}
+								value={component.state.phoneNumber}
 								autoFocus
 								onChange={event => component.setState({ phoneNumber: event.target.value })}
 								placeholder="(555) 555-5555"
@@ -81,6 +83,7 @@ class ContactUs extends React.Component {
 								required
 								pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/"
 								defaultValue={component.state.emailAddress}
+								value={component.state.emailAddress}
 								autoFocus
 								onChange={event => component.setState({ emailAddress: event.target.value })}
 							/>
@@ -123,7 +126,7 @@ class ContactUs extends React.Component {
 			errors: []
 		};
 
-		this.state = lodash.assignIn({}, this.defaultState);
+		this.state = _.clone(this.defaultState, true);
 
 		this.issueSuggestions = [
 			{ value: "I'm having trouble logging in." },
@@ -402,9 +405,14 @@ class ContactUs extends React.Component {
 		});
 
 		let options = {
-			userName: this.state.firstName + " " + this.state.lastName + (user.admin === "Y" ? " (Admin)" : ""),
+			userName:
+				this.state.firstName +
+				" " +
+				this.state.lastName +
+				(typeof user !== "undefined" && user.admin === "Y" ? " (Admin)" : ""),
 			contactPreference: this.state.contactPreference,
-			problemOverview: this.state.problemOverview,
+			problemOverview:
+				(this.state.selectedIssue ? this.state.selectedIssue.value + " — " : "") + this.state.problemOverview,
 			description: this.state.description,
 			browserInfo: this.getClientInfo()
 		};
@@ -433,15 +441,6 @@ class ContactUs extends React.Component {
 					submitted: data.success,
 					errors: lodash.get(data, "errors") || []
 				});
-
-				// auto-closing on successful submission
-				if (this.state.submitted) {
-					setTimeout(function() {
-						clearTimeout(this);
-
-						// component.reset();
-					}, 1000);
-				}
 			})
 			.catch(error => {
 				this.setState({
@@ -755,7 +754,8 @@ class ContactUs extends React.Component {
 																<div
 																	className={
 																		"text-left " +
-																		(this.state.contactPreference === preference.key
+																		(this.state.contactPreference ===
+																			preference.key && preference.condition()
 																			? ""
 																			: "hidden")
 																	}
@@ -825,6 +825,7 @@ class ContactUs extends React.Component {
 													maxLength="25"
 													placeholder="First Name"
 													defaultValue={this.state.firstName}
+													value={this.state.firstName}
 													onChange={event => this.setState({ firstName: event.target.value })}
 												/>
 												<input
@@ -833,6 +834,7 @@ class ContactUs extends React.Component {
 													maxLength="25"
 													placeholder="Last Name"
 													defaultValue={this.state.lastName}
+													value={this.state.lastName}
 													onChange={event => this.setState({ lastName: event.target.value })}
 												/>
 											</div>
@@ -930,6 +932,7 @@ class ContactUs extends React.Component {
 													<input
 														className="fullWidth"
 														defaultValue={this.state.problemOverview}
+														value={this.state.problemOverview}
 														onChange={event =>
 															this.setState({ problemOverview: event.target.value })
 														}
@@ -952,6 +955,7 @@ class ContactUs extends React.Component {
 												<textarea
 													className="fullWidth"
 													defaultValue={this.state.description}
+													value={this.state.description}
 													onChange={event =>
 														this.setState({ description: event.target.value })
 													}
@@ -1051,13 +1055,22 @@ class ContactUs extends React.Component {
 									"modal-footer flexed valign-wrapper " +
 									(this.state.requestingSupport && !this.state.doneEditing ? "" : "hidden")
 								}
+								style={{
+									flexWrap: "wrap"
+								}}
 							>
 								<span className="tiny secondary-text">All inputs are required.</span>
 								<span className="tiny secondary-text">
-									{this.state.contactPreference === "phone" && "Or call <a href='tel:866-294-4599 ext. 111'>866-294-4599 ext. 111</a> (M-F 8 am - 4pm CST"}
+									{this.state.contactPreference === "phone" && !this.isAfterHours() && (
+										<span>
+											Or call <a href="tel:866-294-4599 ext. 111">866-294-4599 ext. 111</a> (M-F 8
+											am - 4pm CST)
+										</span>
+									)}
 
-									{this.state.contactPreference === "email" &&
-										"A copy of this request will be emailed to you."}
+									{this.state.contactPreference === "email" && (
+										<span>A copy of this request will be emailed to you.</span>
+									)}
 								</span>
 							</div>
 						</div>
