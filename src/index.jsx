@@ -172,7 +172,7 @@ class ContactUs extends React.Component {
 		let hoursRightNow = parseInt(lodash.first(localeString.split(":")));
 
 		// NOT Mon. - Fri. between 7am - 4pm
-		return (theDay > 0 && theDay < 6 && (hoursRightNow < 16 && hoursRightNow > 6));
+		return !(theDay > 0 && theDay < 6 && (hoursRightNow < 16 && hoursRightNow > 6));
 	};
 
 	reset() {
