@@ -160,8 +160,17 @@ class ContactUs extends React.Component {
 	}
 
 	isAfterHours = () => {
-		let hoursRightNow = new Date().getHours();
-		return !(hoursRightNow < 16 && hoursRightNow > 6);
+		let today = new Date();
+		let theDay = today.getDay();
+
+		let localeString = today.toLocaleTimeString("en-US", {
+			timeZone: "America/Chicago",
+			hour12: false
+		});
+		let hoursRightNow = parseInt(lodash.first(localeString.split(":")));
+
+		// NOT Mon. - Fri. between 7am - 4pm
+		return !(theDay > 0 && theDay < 6 && (hoursRightNow < 16 && hoursRightNow > 6));
 	};
 
 	reset() {
@@ -1060,18 +1069,21 @@ class ContactUs extends React.Component {
 								}}
 							>
 								<span className="tiny secondary-text">All inputs are required.</span>
-								<span className="tiny secondary-text">
-									{this.state.contactPreference === "phone" && !this.isAfterHours() && (
-										<span>
-											Or call <a href="tel:866-294-4599 ext. 111">866-294-4599 ext. 111</a> (M-F 8
-											am - 4pm CST)
-										</span>
-									)}
 
-									{this.state.contactPreference === "email" && (
-										<span>A copy of this request will be emailed to you.</span>
-									)}
-								</span>
+								{this.state.requestingSupport && (
+									<span className="tiny secondary-text">
+										{this.state.contactPreference === "phone" && !this.isAfterHours() && (
+											<span>
+												Or call <a href="tel:866-294-4599 ext. 111">866-294-4599 ext. 111</a>{" "}
+												(M-F 8 am - 4pm CST)
+											</span>
+										)}
+
+										{this.state.contactPreference === "email" && (
+											<span>A copy of this request will be emailed to you.</span>
+										)}
+									</span>
+								)}
 							</div>
 						</div>
 					</div>
