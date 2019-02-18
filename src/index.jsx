@@ -31,7 +31,8 @@ class ContactUs extends React.Component {
 				// actionLabel: "within 10 minutes.",
 				disabledMessage: "Callback assistance is available M-F 8 am - 4 pm CST.",
 				condition: () => {
-					return !this.isAfterHours();
+					return true;
+					// return !this.isAfterHours();
 				},
 				control: function(key) {
 					return (
@@ -171,7 +172,7 @@ class ContactUs extends React.Component {
 		let hoursRightNow = parseInt(lodash.first(localeString.split(":")));
 
 		// NOT Mon. - Fri. between 7am - 4pm
-		return !(theDay > 0 && theDay < 6 && (hoursRightNow < 16 && hoursRightNow > 6));
+		return (theDay > 0 && theDay < 6 && (hoursRightNow < 16 && hoursRightNow > 6));
 	};
 
 	reset() {
