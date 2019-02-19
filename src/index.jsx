@@ -125,7 +125,9 @@ class ContactUs extends React.Component {
 			doneEditing: false,
 			submitting: false,
 			submitted: false,
-			errors: []
+			errors: [],
+			notices: [],
+			commonQuestions: []
 		};
 
 		this.state = _.clone(this.defaultState, true);
@@ -155,10 +157,6 @@ class ContactUs extends React.Component {
 			},
 			{ value: "Something else..." }
 		];
-
-		this.getNotices();
-		this.getCommonQuestions();
-		this.getCourses();
 	}
 
 	isAfterHours = () => {
@@ -177,6 +175,9 @@ class ContactUs extends React.Component {
 
 	reset() {
 		this.setState(this.defaultState);
+
+		this.getNotices();
+		this.getCommonQuestions();
 	}
 
 	getNotices = () => {
@@ -483,6 +484,9 @@ class ContactUs extends React.Component {
 					id="customerSupportHelpButton"
 					title="Get help"
 					onClick={() => {
+						this.getNotices();
+						this.getCommonQuestions();
+
 						$("#customerSupportHelpModal").modal("toggle");
 					}}
 					data-toggle="modal"
@@ -587,7 +591,11 @@ class ContactUs extends React.Component {
 										<label className="secondary-text">Still having trouble?</label>
 										<Button
 											variant="secondary"
-											onClick={() => this.setState({ requestingSupport: true })}
+											onClick={() => {
+												this.getCourses();
+
+												this.setState({ requestingSupport: true });
+											}}
 										>
 											<FontAwesomeIcon name="life-ring" />
 											<span>Contact Support</span>
