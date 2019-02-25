@@ -155,7 +155,12 @@ class ContactUs extends React.Component {
 				itemLabel: "course",
 				items: []
 			},
-			{ value: "Something else..." }
+			{
+				value: "Something else...",
+				itemLabel: "course",
+				items: [],
+				itemOptional: true
+			}
 		];
 	}
 
@@ -908,8 +913,14 @@ class ContactUs extends React.Component {
 													<Dropdown>
 														<Dropdown.Toggle variant="secondary">
 															<span>
-																{this.state.problemOverview ||
-																	"Select a " + this.state.selectedIssue.itemLabel}
+																{!this.state.selectedIssue.itemOptional &&
+																this.state.problemOverview
+																	? this.state.problemOverview
+																	: "Select a " +
+																	  this.state.selectedIssue.itemLabel +
+																	  (this.state.selectedIssue.itemOptional
+																			? " (if applicable)"
+																			: "")}
 															</span>
 															<FontAwesomeIcon name="caret-down" />
 														</Dropdown.Toggle>
@@ -1083,9 +1094,8 @@ class ContactUs extends React.Component {
 								{this.state.requestingSupport && (
 									<span className="tiny secondary-text">
 										{this.state.contactPreference === "phone" && !this.isAfterHours() && (
-											<span>
-												Or call <a href="tel:866-294-4599 ext. 111">866-294-4599 ext. 111</a>{" "}
-												(M-F 8 am - 4pm CST)
+											<span className="tiny">
+												Or call 866-294-4599 ext. 111 (M-F 8am - 4pm CST)
 											</span>
 										)}
 
@@ -1105,6 +1115,16 @@ class ContactUs extends React.Component {
 
 window.lodash = _.noConflict();
 $(document).on("ready", function() {
+	if (window.location.href.indexOf("/admin") > -1) return;
+
+	var needHelpTriggers = document.getElementsByClassName("inline-need-help-trigger");
+
+	for (let i = 0; i < needHelpTriggers.length; ++i) {
+		needHelpTriggers[i].onclick = function() {
+			document.getElementById("customerSupportHelpButton").click();
+		};
+	}
+
 	ReactDOM.render(
 		<ContactUs />,
 		$("<div/>", {
