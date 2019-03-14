@@ -1116,6 +1116,7 @@ class ContactUs extends React.Component {
 window.lodash = _.noConflict();
 $(document).on("ready", function() {
 	if (window.location.href.indexOf("/admin") > -1) return;
+	if (window.location.href.indexOf("/reports") > -1) return;
 
 	var needHelpTriggers = document.getElementsByClassName("inline-need-help-trigger");
 
