@@ -39,6 +39,15 @@ $green: #40a138;
 		font-family: Arial, Helvetica, sans-serif !important;
 	}
 
+	i:not(.fa) {
+		font-style: italic;
+	}
+
+	.disabled, :disabled {
+		opacity: 0.65;
+		pointer-events: none;
+	}
+
 	h3 {
 		line-height: 0.8em;
 	}

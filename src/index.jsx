@@ -1,26 +1,26 @@
-"use strict";
+"use strict"
 
-import fetch from "isomorphic-fetch";
-import React from "react";
-import ReactDOM from "react-dom";
-import Button from "react-bootstrap/Button";
-import Dropdown from "react-bootstrap/Dropdown";
-import MaskedInput from "react-maskedinput";
-import { validate as validateEmail } from "email-validator";
-import lodash from "lodash";
-import FontAwesomeIcon from "react-fontawesome";
-import decode from "unescape";
-import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
+import fetch from "isomorphic-fetch"
+import React from "react"
+import ReactDOM from "react-dom"
+import Button from "react-bootstrap/Button"
+import Dropdown from "react-bootstrap/Dropdown"
+import MaskedInput from "react-maskedinput"
+import { validate as validateEmail } from "email-validator"
+import lodash from "lodash"
+import FontAwesomeIcon from "react-fontawesome"
+import decode from "unescape"
+import { QuillDeltaToHtmlConverter } from "quill-delta-to-html"
 // import { hasFlashPlayerVersion } from "swfobject";
 
-import "font-awesome/css/font-awesome.css";
-import "./styles.scss";
+import "font-awesome/css/font-awesome.css"
+import "./styles.scss"
 
 class ContactUs extends React.Component {
 	constructor(props) {
-		super(props);
+		super(props)
 
-		let component = this;
+		let component = this
 
 		this.contactPreferences = [
 			{
@@ -31,7 +31,7 @@ class ContactUs extends React.Component {
 				// actionLabel: "within 10 minutes.",
 				disabledMessage: "Callback assistance is available M-F 8 am - 4 pm CST.",
 				condition: () => {
-					return true;
+					return true
 					// return !this.isAfterHours();
 				},
 				control: function(key) {
@@ -56,7 +56,7 @@ class ContactUs extends React.Component {
 								placeholder="(555) 555-5555"
 							/>
 						</div>
-					);
+					)
 				}
 			},
 			{
@@ -66,7 +66,7 @@ class ContactUs extends React.Component {
 				actionHeader: "We'll email you.",
 				// actionLabel: "within 24 hours.",
 				condition: () => {
-					return true;
+					return true
 				},
 				control: function(key) {
 					return (
@@ -89,10 +89,10 @@ class ContactUs extends React.Component {
 								onChange={event => component.setState({ emailAddress: event.target.value })}
 							/>
 						</div>
-					);
+					)
 				}
 			}
-		];
+		]
 
 		// Changing contact preference action labels based on whether it's after hours or not
 		// let phoneContactPreference = lodash.find(this.contactPreferences, {
@@ -110,7 +110,7 @@ class ContactUs extends React.Component {
 			lastName: typeof user !== "undefined" ? lodash.get(user, "lastName") : "",
 			contactPreference:
 				lodash.filter(this.contactPreferences, preference => {
-					return preference.condition();
+					return preference.condition()
 				}).length === 1
 					? "email"
 					: "",
@@ -128,9 +128,9 @@ class ContactUs extends React.Component {
 			errors: [],
 			notices: [],
 			commonQuestions: []
-		};
+		}
 
-		this.state = _.clone(this.defaultState, true);
+		this.state = { ...this.defaultState }
 
 		this.issueSuggestions = [
 			{ value: "I'm having trouble logging in." },
@@ -138,7 +138,11 @@ class ContactUs extends React.Component {
 			{
 				value: "I need a copy of my certificate(s).",
 				itemLabel: "course",
-				items: []
+				items: [],
+				condition: () => {
+					return this.state.contactPreference === "email"
+				},
+				reason: "Certificate copies may only be requested using the email contact preference."
 			},
 			{
 				value: "I need to sync my score to my LMS.",
@@ -161,139 +165,139 @@ class ContactUs extends React.Component {
 				items: [],
 				itemOptional: true
 			}
-		];
+		]
 	}
 
 	isAfterHours = () => {
-		let today = new Date();
-		let theDay = today.getDay();
+		let today = new Date()
+		let theDay = today.getDay()
 
 		let localeString = today.toLocaleTimeString("en-US", {
 			timeZone: "America/Chicago",
 			hour12: false
-		});
-		let hoursRightNow = parseInt(lodash.first(localeString.split(":")));
+		})
+		let hoursRightNow = parseInt(lodash.first(localeString.split(":")))
 
 		// NOT Mon. - Fri. between 7am - 4pm
-		return !(theDay > 0 && theDay < 6 && (hoursRightNow < 16 && hoursRightNow > 6));
-	};
+		return !(theDay > 0 && theDay < 6 && (hoursRightNow < 16 && hoursRightNow > 6))
+	}
 
 	reset() {
-		this.setState(this.defaultState);
+		this.setState(this.defaultState)
 
-		this.getNotices();
-		this.getCommonQuestions();
+		this.getNotices()
+		this.getCommonQuestions()
 	}
 
 	getNotices = () => {
-		this.state.notices = [];
+		this.state.notices = []
 
 		fetch("/admin/techSupport/notices", {
 			method: "GET"
 		})
 			.then(response => {
-				return response.json();
+				return response.json()
 			})
 			.then(data => {
 				// user quill to html to convert incoming notice info to html
 				let notices = lodash.map(data, ops => {
-					let notice = JSON.parse(ops);
-					let converter = new QuillDeltaToHtmlConverter(notice.ops);
-					return converter.convert();
-				});
+					let notice = JSON.parse(ops)
+					let converter = new QuillDeltaToHtmlConverter(notice.ops)
+					return converter.convert()
+				})
 
 				this.setState({
 					notices: notices
-				});
-			});
-	};
+				})
+			})
+	}
 
 	getCommonQuestions = () => {
-		this.state.commonQuestions = [];
+		this.state.commonQuestions = []
 
 		fetch("/admin/techSupport/commonQuestions", {
 			method: "GET"
 		})
 			.then(response => {
-				return response.json();
+				return response.json()
 			})
 			.then(data => {
 				this.setState({
 					commonQuestions: data
-				});
-			});
-	};
+				})
+			})
+	}
 
 	getCourses = () => {
 		fetch("/admin/techSupport/products", {
 			method: "GET"
 		})
 			.then(response => {
-				return response.json();
+				return response.json()
 			})
 			.then(data => {
 				// populate items arrays with courses
 				this.issueSuggestions = lodash.map(this.issueSuggestions, issue => {
-					if (lodash.get(issue, "items") && issue.itemLabel === "course") issue.items = data;
+					if (lodash.get(issue, "items") && issue.itemLabel === "course") issue.items = data
 
-					return issue;
-				});
-			});
-	};
+					return issue
+				})
+			})
+	}
 
 	getClientInfo() {
 		// https://stackoverflow.com/a/11219680
 
-		var nVer = navigator.appVersion;
-		var nAgt = navigator.userAgent;
-		var browserName = navigator.appName;
-		var fullVersion = "" + parseFloat(nVer);
-		var majorVersion = parseInt(nVer, 10);
-		var nameOffset, verOffset, ix;
+		var nVer = navigator.appVersion
+		var nAgt = navigator.userAgent
+		var browserName = navigator.appName
+		var fullVersion = "" + parseFloat(nVer)
+		var majorVersion = parseInt(nVer, 10)
+		var nameOffset, verOffset, ix
 
 		// In Opera, the true version is after "Opera" or after "Version"
 		if ((verOffset = nAgt.indexOf("Opera")) != -1) {
-			browserName = "Opera";
-			fullVersion = nAgt.substring(verOffset + 6);
-			if ((verOffset = nAgt.indexOf("Version")) != -1) fullVersion = nAgt.substring(verOffset + 8);
+			browserName = "Opera"
+			fullVersion = nAgt.substring(verOffset + 6)
+			if ((verOffset = nAgt.indexOf("Version")) != -1) fullVersion = nAgt.substring(verOffset + 8)
 		}
 		// In MSIE, the true version is after "MSIE" in userAgent
 		else if ((verOffset = nAgt.indexOf("MSIE")) != -1) {
-			browserName = "Microsoft Internet Explorer";
-			fullVersion = nAgt.substring(verOffset + 5);
+			browserName = "Microsoft Internet Explorer"
+			fullVersion = nAgt.substring(verOffset + 5)
 		}
 		// In Chrome, the true version is after "Chrome"
 		else if ((verOffset = nAgt.indexOf("Chrome")) != -1) {
-			browserName = "Chrome";
-			fullVersion = nAgt.substring(verOffset + 7);
+			browserName = "Chrome"
+			fullVersion = nAgt.substring(verOffset + 7)
 		}
 		// In Safari, the true version is after "Safari" or after "Version"
 		else if ((verOffset = nAgt.indexOf("Safari")) != -1) {
-			browserName = "Safari";
-			fullVersion = nAgt.substring(verOffset + 7);
-			if ((verOffset = nAgt.indexOf("Version")) != -1) fullVersion = nAgt.substring(verOffset + 8);
+			browserName = "Safari"
+			fullVersion = nAgt.substring(verOffset + 7)
+			if ((verOffset = nAgt.indexOf("Version")) != -1) fullVersion = nAgt.substring(verOffset + 8)
 		}
 		// In Firefox, the true version is after "Firefox"
 		else if ((verOffset = nAgt.indexOf("Firefox")) != -1) {
-			browserName = "Firefox";
-			fullVersion = nAgt.substring(verOffset + 8);
+			browserName = "Firefox"
+			fullVersion = nAgt.substring(verOffset + 8)
 		}
 		// In most other browsers, "name/version" is at the end of userAgent
 		else if ((nameOffset = nAgt.lastIndexOf(" ") + 1) < (verOffset = nAgt.lastIndexOf("/"))) {
-			browserName = nAgt.substring(nameOffset, verOffset);
-			fullVersion = nAgt.substring(verOffset + 1);
+			browserName = nAgt.substring(nameOffset, verOffset)
+			fullVersion = nAgt.substring(verOffset + 1)
 			if (lodash.toLower(browserName) == lodash.toUpper(browserName)) {
-				browserName = navigator.appName;
+				browserName = navigator.appName
 			}
 		}
 		// trim the fullVersion string at semicolon/space if present
-		if ((ix = fullVersion.indexOf(";")) != -1) fullVersion = fullVersion.substring(0, ix);
-		if ((ix = fullVersion.indexOf(" ")) != -1) fullVersion = fullVersion.substring(0, ix);
+		if ((ix = fullVersion.indexOf(";")) != -1) fullVersion = fullVersion.substring(0, ix)
+		if ((ix = fullVersion.indexOf(" ")) != -1) fullVersion = fullVersion.substring(0, ix)
 
-		majorVersion = parseInt("" + fullVersion, 10);
+		majorVersion = parseInt("" + fullVersion, 10)
 		if (isNaN(majorVersion)) {
-			fullVersion = "" + parseFloat(nVer);
-			majorVersion = parseInt(nVer, 10);
+			fullVersion = "" + parseFloat(nVer)
+			majorVersion = parseInt(nVer, 10)
 		}
 
 		let clientInfo = {
@@ -301,42 +305,42 @@ class ContactUs extends React.Component {
 			majorVersion: majorVersion,
 			fullVersion: fullVersion,
 			userAgent: navigator.userAgent
-		};
+		}
 
 		let browserDescription = lodash
 			.map(clientInfo, (info, key) => {
 				switch (key) {
 					case "browser":
-						return info;
+						return info
 					case "majorVersion":
-						return " " + info;
+						return " " + info
 					case "fullVersion":
-						return " (" + info + ")";
+						return " (" + info + ")"
 					default:
-						return "";
+						return ""
 				}
 			})
-			.join("");
+			.join("")
 
-		var hasFlash = false;
+		var hasFlash = false
 		try {
-			hasFlash = Boolean(new ActiveXObject("ShockwaveFlash.ShockwaveFlash"));
+			hasFlash = Boolean(new ActiveXObject("ShockwaveFlash.ShockwaveFlash"))
 		} catch (exception) {
-			hasFlash = "undefined" != typeof navigator.mimeTypes["application/x-shockwave-flash"];
+			hasFlash = "undefined" != typeof navigator.mimeTypes["application/x-shockwave-flash"]
 		}
-		browserDescription += " — Flash " + (hasFlash ? "" : "Not") + " Installed";
+		browserDescription += " — Flash " + (hasFlash ? "" : "Not") + " Installed"
 
-		return browserDescription;
+		return browserDescription
 	}
 
 	getContactPreference(key) {
 		return lodash.find(this.contactPreferences, {
 			key: key
-		});
+		})
 	}
 
 	readyForContactPreference() {
-		return true;
+		return true
 	}
 
 	readyForFirstAndLastName() {
@@ -347,36 +351,46 @@ class ContactUs extends React.Component {
 				(this.state.contactPreference === "email" &&
 					this.state.emailAddress &&
 					validateEmail(this.state.emailAddress)))
-		);
+		)
 	}
 
 	readyForProblemCategory() {
-		return this.readyForFirstAndLastName() && this.state.firstName && this.state.lastName;
+		return this.readyForFirstAndLastName() && this.state.firstName && this.state.lastName
 	}
 
 	readyForProblemOverview() {
-		return this.readyForProblemCategory() && this.state.selectedIssue;
+		return this.readyForProblemCategory() && this.state.selectedIssue
 	}
 
 	readyForDescription() {
-		return this.readyForProblemOverview() && this.state.problemOverview;
+		return this.readyForProblemOverview() && this.state.problemOverview
 	}
 
 	readyForDoneEditing() {
-		return this.readyForDescription() && this.state.description;
+		return this.readyForDescription() && this.state.description
 	}
 
 	readyForSubmit() {
-		return this.readyForDoneEditing() && this.state.doneEditing;
+		return this.readyForDoneEditing() && this.state.doneEditing
 	}
 
 	compiledDescriptionForSubmitting() {
+		let userNameString = this.state.firstName + " " + this.state.lastName
+		if (typeof user !== "undefined") {
+			userNameString =
+				"<a title='Go to user in admin panel' href='" +
+				window.location.origin +
+				"/admin/EditUsers.php?ID=" +
+				user.id +
+				"'>" +
+				userNameString +
+				(user.admin === "Y" ? " (Admin)" : "") +
+				"</a>"
+		}
+
 		return (
 			"Name: " +
-			this.state.firstName +
-			" " +
-			this.state.lastName +
-			(typeof user !== "undefined" && user.admin === "Y" ? " (Admin)" : "") +
+			userNameString +
 			"<br><br>" +
 			"Issue: " +
 			lodash.get(this.state.selectedIssue, "value") +
@@ -389,29 +403,41 @@ class ContactUs extends React.Component {
 			"<br><br>" +
 			"Description:<br>" +
 			this.state.description
-		);
+		)
 	}
 
 	componentDidUpdate(prevProps, prevState) {
 		// any type of request requires problem overview and description
-		let canSubmit = this.readyForSubmit();
+		let canSubmit = this.readyForSubmit()
 
 		switch (this.state.contactPreference) {
 			case "phone":
 			default:
 				// can submit phone request if phone number is provided
-				canSubmit = canSubmit && /((\(\d{3}\) ?)|(\d{3}-))?\d{3}-\d{4}/.test(this.state.phoneNumber);
-				break;
+				canSubmit = canSubmit && /((\(\d{3}\) ?)|(\d{3}-))?\d{3}-\d{4}/.test(this.state.phoneNumber)
+				break
 
 			case "email":
 				// can submit email request if email address is provided
-				canSubmit = canSubmit && validateEmail(this.state.emailAddress);
-				break;
+				canSubmit = canSubmit && validateEmail(this.state.emailAddress)
+				break
 		}
 
 		// only update the can submit if the previous state was disabled
 		if (prevState.canSubmit !== canSubmit) {
-			this.setState({ canSubmit: canSubmit });
+			this.setState({ canSubmit: canSubmit })
+		}
+
+		// check if selected issue needs to be changed because the condition is no longer met
+		if (prevState.contactPreference !== this.state.contactPreference) {
+			if (
+				typeof lodash.get(this.state.selectedIssue, "condition") === "function" &&
+				!this.state.selectedIssue.condition()
+			) {
+				this.setState({
+					selectedIssue: null
+				})
+			}
 		}
 	}
 
@@ -419,30 +445,39 @@ class ContactUs extends React.Component {
 		this.setState({
 			submitting: true,
 			canSubmit: false
-		});
+		})
+
+		let userNameString = this.state.firstName + " " + this.state.lastName
+		if (typeof user !== "undefined") {
+			userNameString =
+				"<a title='Go to user in admin panel' href='" +
+				window.location.origin +
+				"/admin/EditUsers.php?ID=" +
+				user.id +
+				"' target='_blank'>" +
+				userNameString +
+				(user.admin === "Y" ? " (Admin)" : "") +
+				"</a>"
+		}
 
 		let options = {
-			userName:
-				this.state.firstName +
-				" " +
-				this.state.lastName +
-				(typeof user !== "undefined" && user.admin === "Y" ? " (Admin)" : ""),
+			userName: userNameString,
 			contactPreference: this.state.contactPreference,
 			problemOverview:
 				(this.state.selectedIssue ? this.state.selectedIssue.value + " — " : "") + this.state.problemOverview,
 			description: this.state.description,
 			browserInfo: this.getClientInfo()
-		};
+		}
 
 		switch (this.state.contactPreference) {
 			case "phone":
 			default:
-				options.contactInfo = this.state.phoneNumber.replace(/[^0-9]/g, "");
-				break;
+				options.contactInfo = this.state.phoneNumber.replace(/[^0-9]/g, "")
+				break
 
 			case "email":
-				options.contactInfo = this.state.emailAddress;
-				break;
+				options.contactInfo = this.state.emailAddress
+				break
 		}
 
 		fetch("/admin/techSupport/submitTicket", {
@@ -450,38 +485,38 @@ class ContactUs extends React.Component {
 			body: JSON.stringify(options)
 		})
 			.then(response => {
-				return response.json();
+				return response.json()
 			})
 			.then(data => {
 				this.setState({
 					submitting: false,
 					submitted: data.success,
 					errors: lodash.get(data, "errors") || []
-				});
+				})
 			})
 			.catch(error => {
 				this.setState({
 					submitting: false,
 					submitted: false,
 					errors: [error.message]
-				});
-			});
-	};
+				})
+			})
+	}
 
 	submitText() {
 		if (this.state.submitting) {
-			return "Submitting...";
+			return "Submitting..."
 		}
 
 		if (this.state.submitted) {
-			return "Submitted!";
+			return "Submitted!"
 		}
 
-		return "Submit";
+		return "Submit"
 	}
 
 	render() {
-		let submitVerbiage = this.submitText();
+		let submitVerbiage = this.submitText()
 
 		return (
 			<div>
@@ -489,10 +524,10 @@ class ContactUs extends React.Component {
 					id="customerSupportHelpButton"
 					title="Get help"
 					onClick={() => {
-						this.getNotices();
-						this.getCommonQuestions();
+						this.getNotices()
+						this.getCommonQuestions()
 
-						$("#customerSupportHelpModal").modal("toggle");
+						$("#customerSupportHelpModal").modal("toggle")
 					}}
 					data-toggle="modal"
 				>
@@ -527,7 +562,7 @@ class ContactUs extends React.Component {
 												onClick={() =>
 													this.setState({
 														notices: this.state.notices.filter((_value, index) => {
-															return index !== i;
+															return index !== i
 														})
 													})
 												}
@@ -535,7 +570,7 @@ class ContactUs extends React.Component {
 												Close message
 											</a>
 										</div>
-									);
+									)
 								})}
 
 								{/* Initial View */}
@@ -574,14 +609,14 @@ class ContactUs extends React.Component {
 															}}
 														/>
 													</li>
-												);
+												)
 											})}
 										</ul>
 										<div class="row section">
 											<Button
 												variant="danger"
 												onClick={() => {
-													window.location.href = "/FAQs.php";
+													window.location.href = "/FAQs.php"
 												}}
 											>
 												<span>View All</span>
@@ -597,9 +632,9 @@ class ContactUs extends React.Component {
 										<Button
 											variant="secondary"
 											onClick={() => {
-												this.getCourses();
+												this.getCourses()
 
-												this.setState({ requestingSupport: true });
+												this.setState({ requestingSupport: true })
 											}}
 										>
 											<FontAwesomeIcon name="life-ring" />
@@ -658,19 +693,19 @@ class ContactUs extends React.Component {
 									>
 										<FontAwesomeIcon
 											name={(() => {
-												if (this.state.submitting) return "circle-o-notch";
-												if (this.state.submitted) return "check-circle";
+												if (this.state.submitting) return "circle-o-notch"
+												if (this.state.submitted) return "check-circle"
 
-												return "times-circle";
+												return "times-circle"
 											})()}
 											size="3x"
 											spin={this.state.submitting ? "spin" : ""}
 											style={{
 												color: (() => {
-													if (this.state.submitting) return "#cccccc";
-													if (this.state.submitted) return "#40a138";
+													if (this.state.submitting) return "#cccccc"
+													if (this.state.submitted) return "#40a138"
 
-													return "#D20000";
+													return "#D20000"
 												})()
 											}}
 										/>
@@ -712,7 +747,7 @@ class ContactUs extends React.Component {
 																		<span>Try Again</span>
 																	</Button>
 																</div>
-															);
+															)
 													  })
 													: ""}
 											</span>
@@ -767,7 +802,7 @@ class ContactUs extends React.Component {
 																	onClick={() => {
 																		this.setState({
 																			contactPreference: preference.key
-																		});
+																		})
 																	}}
 																	title={
 																		!preference.condition()
@@ -799,7 +834,7 @@ class ContactUs extends React.Component {
 																	</label>
 																</div>
 															</div>
-														);
+														)
 													})}
 												</div>
 
@@ -823,9 +858,9 @@ class ContactUs extends React.Component {
 																>
 																	{preference.disabledMessage}
 																</p>
-															);
+															)
 
-														return preference.control(i);
+														return preference.control(i)
 													})}
 												</div>
 											</div>
@@ -885,6 +920,10 @@ class ContactUs extends React.Component {
 													</Dropdown.Toggle>
 													<Dropdown.Menu>
 														{this.issueSuggestions.map((issue, i) => {
+															let disabled =
+																typeof issue.condition === "function" &&
+																!issue.condition()
+
 															return (
 																<Dropdown.Item
 																	key={"issueItem_" + i}
@@ -893,18 +932,22 @@ class ContactUs extends React.Component {
 																		this.setState({
 																			selectedIssue: issue,
 																			problemOverview: ""
-																		});
+																		})
 
 																		if (!lodash.get(issue, "items")) {
 																			this.setState({
 																				problemOverview: issue.value
-																			});
+																			})
 																		}
 																	}}
+																	disabled={disabled}
 																>
-																	{issue.value}
+																	<p>{issue.value}</p>
+																	{disabled && (
+																		<i className="text-danger">{issue.reason}</i>
+																	)}
 																</Dropdown.Item>
-															);
+															)
 														})}
 													</Dropdown.Menu>
 												</Dropdown>
@@ -939,7 +982,7 @@ class ContactUs extends React.Component {
 																	>
 																		{item}
 																	</Dropdown.Item>
-																);
+																)
 															})}
 														</Dropdown.Menu>
 													</Dropdown>
@@ -1109,21 +1152,21 @@ class ContactUs extends React.Component {
 					</div>
 				</div>
 			</div>
-		);
+		)
 	}
 }
 
-window.lodash = _.noConflict();
+window.lodash = _.noConflict()
 $(document).on("ready", function() {
-	if (window.location.href.indexOf("/admin") > -1) return;
-	if (window.location.href.indexOf("/reports") > -1) return;
+	if (window.location.href.indexOf("/admin") > -1) return
+	if (window.location.href.indexOf("/reports") > -1) return
 
-	var needHelpTriggers = document.getElementsByClassName("inline-need-help-trigger");
+	var needHelpTriggers = document.getElementsByClassName("inline-need-help-trigger")
 
 	for (let i = 0; i < needHelpTriggers.length; ++i) {
 		needHelpTriggers[i].onclick = function() {
-			document.getElementById("customerSupportHelpButton").click();
-		};
+			document.getElementById("customerSupportHelpButton").click()
+		}
 	}
 
 	ReactDOM.render(
@@ -1133,5 +1176,5 @@ $(document).on("ready", function() {
 		})
 			.appendTo("body")
 			.get(0)
-	);
-});
+	)
+})
