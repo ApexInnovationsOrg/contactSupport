@@ -43,7 +43,8 @@ $green: #40a138;
 		font-style: italic;
 	}
 
-	.disabled, :disabled {
+	.disabled,
+	:disabled {
 		opacity: 0.65;
 		pointer-events: none;
 	}
@@ -217,6 +218,7 @@ $green: #40a138;
 		display: block;
 		font-weight: normal;
 		font-size: 0.85em;
+		line-height: 1.4em;
 		margin-bottom: 0.8em;
 
 		.fa {

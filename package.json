@@ -5,8 +5,7 @@
 	"repository": "https://github.com/ApexInnovationsOrg/contactSupport",
 	"main": "index.jsx",
 	"scripts": {
-		"devboxWindows": "npx webpack --watch -p -o X:_/components/js/contactSupport/contactSupport.js",
-		"devboxMac": "mount_smbfs //jeffery@devbox2.apexinnovations.com/www/apexinnovations.com/_/components/js/contactSupport ./devbox_mount && npx webpack --watch -p -o devbox_mount/contactSupport.js",
+		"start": "mount_smbfs //jeffery@devbox2.apexinnovations.com/www/apexinnovations.com/_/components/js/contactSupport ./devbox_mount && npx webpack --watch -p -o devbox_mount/contactSupport.js || npx webpack --watch -p -o X:_/components/js/contactSupport/contactSupport.js",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [],

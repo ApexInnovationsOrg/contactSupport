@@ -874,28 +874,60 @@ class ContactUs extends React.Component {
 											>
 												<hr />
 
-												<label className="secondary-text">
-													First things first: we need to know who you are!
-												</label>
-												<input
-													type="text"
-													autoFocus
-													required
-													maxLength="25"
-													placeholder="First Name"
-													defaultValue={this.state.firstName}
-													value={this.state.firstName}
-													onChange={event => this.setState({ firstName: event.target.value })}
-												/>
-												<input
-													type="text"
-													required
-													maxLength="25"
-													placeholder="Last Name"
-													defaultValue={this.state.lastName}
-													value={this.state.lastName}
-													onChange={event => this.setState({ lastName: event.target.value })}
-												/>
+												{/* user not logged in */}
+												{typeof user === "undefined" && (
+													<div>
+														<label className="secondary-text">
+															First things first: we need to know who you are!
+														</label>
+
+														<input
+															type="text"
+															autoFocus
+															required
+															maxLength="25"
+															placeholder="First Name"
+															defaultValue={this.state.firstName}
+															value={this.state.firstName}
+															onChange={event =>
+																this.setState({ firstName: event.target.value })
+															}
+														/>
+														<input
+															type="text"
+															required
+															maxLength="25"
+															placeholder="Last Name"
+															defaultValue={this.state.lastName}
+															value={this.state.lastName}
+															onChange={event =>
+																this.setState({ lastName: event.target.value })
+															}
+														/>
+													</div>
+												)}
+
+												{/* user logged in */}
+												{typeof user !== "undefined" && (
+													<label>
+														<span className="secondary-text">You're logged in as</span>
+														<strong>
+															{" "}
+															{user.firstName} {user.lastName}
+														</strong>
+														<span>.</span>
+														{user.admin === "Y" && (
+															<label
+																className="secondary-text"
+																style={{ marginTop: "0.3em" }}
+															>
+																If you're requesting support on behalf of another user,
+																be sure to provide their information in the description
+																field later.
+															</label>
+														)}
+													</label>
+												)}
 											</div>
 
 											{/* Problem Category Selection */}
