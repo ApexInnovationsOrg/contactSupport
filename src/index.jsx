@@ -134,14 +134,16 @@ class ContactUs extends React.Component {
 
 		this.issueSuggestions = [
 			{ value: "I'm having trouble logging in." },
-			{ value: "I need to update my name and/or email address." },
+			{
+				value: "I need to update my name and/or email address.",
+				condition: () => this.state.contactPreference === "email",
+				reason: "Name and/or email address updates may only be requested using the email contact preference."
+			},
 			{
 				value: "I need a copy of my certificate(s).",
 				itemLabel: "course",
 				items: [],
-				condition: () => {
-					return this.state.contactPreference === "email"
-				},
+				condition: () => this.state.contactPreference === "email",
 				reason: "Certificate copies may only be requested using the email contact preference."
 			},
 			{
