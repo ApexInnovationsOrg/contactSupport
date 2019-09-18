@@ -133,7 +133,11 @@ class ContactUs extends React.Component {
 		this.state = { ...this.defaultState }
 
 		this.issueSuggestions = [
-			{ value: "I'm having trouble logging in." },
+			{ 
+				value: "I don't remember my login email and/or password.",
+				condition: () => this.state.contactPreference === "email",
+				reason: "Requesting your login information may only be requested by using the email contact preference."
+			},
 			{
 				value: "I need to update my name and/or email address.",
 				condition: () => this.state.contactPreference === "email",
