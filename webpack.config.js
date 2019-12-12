@@ -14,6 +14,9 @@ module.exports = {
 	optimization: {
 		minimize: true
 	},
+	performance:{
+		hints:false
+	},
 	module: {
 		rules: [
 			// BABEL JS Loader
