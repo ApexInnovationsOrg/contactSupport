@@ -19,7 +19,7 @@ import "./styles.scss"
 class ContactUs extends React.Component {
 	constructor(props) {
 		super(props)
-
+ 
 		let component = this
 
 		this.contactPreferences = [
@@ -384,14 +384,8 @@ class ContactUs extends React.Component {
 		let userNameString = this.state.firstName + " " + this.state.lastName
 		if (typeof user !== "undefined") {
 			userNameString =
-				"<a title='Go to user in admin panel' href='" +
-				window.location.origin +
-				"/admin/EditUsers.php?ID=" +
-				user.id +
-				"'>" +
 				userNameString +
-				(user.admin === "Y" ? " (Admin)" : "") +
-				"</a>"
+				(user.admin === "Y" ? " (Admin)" : "")
 		}
 
 		return (
@@ -456,14 +450,8 @@ class ContactUs extends React.Component {
 		let userNameString = this.state.firstName + " " + this.state.lastName
 		if (typeof user !== "undefined") {
 			userNameString =
-				"<a title='Go to user in admin panel' href='" +
-				window.location.origin +
-				"/admin/EditUsers.php?ID=" +
-				user.id +
-				"' target='_blank'>" +
 				userNameString +
-				(user.admin === "Y" ? " (Admin)" : "") +
-				"</a>"
+				(user.admin === "Y" ? " (Admin)" : "")
 		}
 
 		let options = {
