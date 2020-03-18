@@ -384,8 +384,14 @@ class ContactUs extends React.Component {
 		let userNameString = this.state.firstName + " " + this.state.lastName
 		if (typeof user !== "undefined") {
 			userNameString =
+				"<a title='Go to user in admin panel' href='" +
+				window.location.origin +
+				"/admin/EditUsers.php?ID=" +
+				user.id +
+				"'>" +
 				userNameString +
 				(user.admin === "Y" ? " (Admin)" : "")
+				+ "</a>"
 		}
 
 		return (
