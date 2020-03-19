@@ -454,8 +454,9 @@ class ContactUs extends React.Component {
 		})
 
 		let userNameString = this.state.firstName + " " + this.state.lastName
+		let userNameStringLink = ''
 		if (typeof user !== "undefined") {
-			userNameString =
+			userNameStringLink =
 				"<a title='Go to user in admin panel' href='" +
 				window.location.origin +
 				"/admin/EditUsers.php?ID=" +
@@ -468,6 +469,7 @@ class ContactUs extends React.Component {
 
 		let options = {
 			userName: userNameString,
+			userNameLink: userNameStringLink,
 			contactPreference: this.state.contactPreference,
 			problemOverview:
 				(this.state.selectedIssue ? this.state.selectedIssue.value + " — " : "") + this.state.problemOverview,
