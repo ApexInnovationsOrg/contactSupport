@@ -722,9 +722,7 @@ class ContactUs extends React.Component {
 											{/* Submitting... */}
 											{this.state.submitting ? "Submitting your support request." : ""}
 											{/* Submitted */}
-											{this.state.submitted
-												? "Your support request was submitted successfully."
-												: ""}
+											{this.state.submitted ? <div><p>Your support request was submitted successfully.</p><p><strong>Please do not submit another request or call for assistance for the same issue, we will get back to you as soon as possible.</strong></p></div>	: ""}
 											{/* Error */}
 											<span
 												style={{
