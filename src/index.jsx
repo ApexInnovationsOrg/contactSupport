@@ -205,15 +205,8 @@ class ContactUs extends React.Component {
 				return response.json()
 			})
 			.then(data => {
-				// user quill to html to convert incoming notice info to html
-				let notices = lodash.map(data, ops => {
-					let notice = JSON.parse(ops)
-					let converter = new QuillDeltaToHtmlConverter(notice.ops)
-					return converter.convert()
-				})
-
 				this.setState({
-					notices: notices
+					notices: data
 				})
 			})
 	}
