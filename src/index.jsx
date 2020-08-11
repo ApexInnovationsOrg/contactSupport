@@ -1190,12 +1190,12 @@ class ContactUs extends React.Component {
 window.lodash = _.noConflict()
 $(document).on("ready", function() {
 	if (window.location.href.indexOf("/admin") > -1) return
-	if (window.location.href.indexOf("/reports") > -1) return
-
+	if (window.location.href.indexOf("/reports") > -1) return	
+	
 	var needHelpTriggers = document.getElementsByClassName("inline-need-help-trigger")
 
 	for (let i = 0; i < needHelpTriggers.length; ++i) {
-		needHelpTriggers[i].onclick = function() {
+		needHelpTriggers[i].onclick = function() {			
 			document.getElementById("customerSupportHelpButton").click()
 		}
 	}
@@ -1206,6 +1206,12 @@ $(document).on("ready", function() {
 			id: "contactUsContainer"
 		})
 			.appendTo("body")
-			.get(0)
-	)
+			.get(0),
+		function(){
+			if(window.location.href.indexOf("techSupport=1") > -1){
+				document.getElementById("customerSupportHelpButton").click()
+			}
+		}
+	)	
+
 })
