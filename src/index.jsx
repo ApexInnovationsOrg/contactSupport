@@ -11,6 +11,7 @@ import lodash from "lodash"
 import FontAwesomeIcon from "react-fontawesome"
 import decode from "unescape"
 import { QuillDeltaToHtmlConverter } from "quill-delta-to-html"
+import { useDropzone } from 'react-dropzone'
 // import { hasFlashPlayerVersion } from "swfobject";
 
 import "font-awesome/css/font-awesome.css"
@@ -127,7 +128,8 @@ class ContactUs extends React.Component {
 			submitted: false,
 			errors: [],
 			notices: [],
-			commonQuestions: []
+			commonQuestions: [],
+			attachments: []
 		}
 
 		this.state = { ...this.defaultState }
@@ -172,6 +174,14 @@ class ContactUs extends React.Component {
 				itemOptional: true
 			}
 		]
+		
+		this.rootSite = "";
+		if(window.location.host == 'login.apexinnovations.com'){
+			this.rootSite = "https://www.apexinnovations.com";
+		}
+		if(window.location.host == 'local.apexinnovations.com'){
+			this.rootSite = "https://local.apexinnovations.com";			
+		}
 	}
 
 	isAfterHours = () => {
@@ -197,8 +207,8 @@ class ContactUs extends React.Component {
 
 	getNotices = () => {
 		this.state.notices = []
-
-		fetch("/admin/techSupport/notices", {
+		
+		fetch(this.rootSite + "/admin/techSupport/notices", {
 			method: "GET"
 		})
 			.then(response => {
@@ -214,7 +224,7 @@ class ContactUs extends React.Component {
 	getCommonQuestions = () => {
 		this.state.commonQuestions = []
 
-		fetch("/admin/techSupport/commonQuestions", {
+		fetch(this.rootSite + "/admin/techSupport/commonQuestions", {
 			method: "GET"
 		})
 			.then(response => {
@@ -228,7 +238,7 @@ class ContactUs extends React.Component {
 	}
 
 	getCourses = () => {
-		fetch("/admin/techSupport/products", {
+		fetch(this.rootSite + "/admin/techSupport/products", {
 			method: "GET"
 		})
 			.then(response => {
@@ -481,7 +491,7 @@ class ContactUs extends React.Component {
 				break
 		}
 
-		fetch("/admin/techSupport/submitTicket", {
+		fetch(this.rootSite + "/admin/techSupport/submitTicket", {
 			method: "POST",
 			body: JSON.stringify(options)
 		})
@@ -494,6 +504,7 @@ class ContactUs extends React.Component {
 					submitted: data.success,
 					errors: lodash.get(data, "errors") || []
 				})
+				this.addAttachmentToTicket(data.ticketID)
 			})
 			.catch(error => {
 				this.setState({
@@ -502,6 +513,7 @@ class ContactUs extends React.Component {
 					errors: [error.message]
 				})
 			})
+		
 	}
 
 	submitText() {
@@ -515,7 +527,145 @@ class ContactUs extends React.Component {
 
 		return "Submit"
 	}
-
+	
+	formData = {
+		attachmentData: new FormData()
+	}
+		
+	addAttachmentToTicket(ticketID){
+		this.formData.attachmentData.append('ticketID', ticketID)
+		
+		fetch(this.rootSite + "/admin/techSupport/submitTicketAttachment", {
+			method: "POST",
+			body: this.formData.attachmentData
+		})
+		.then(response => {
+			return response.json()
+		})
+		.catch(error => {
+			this.setState({
+				errors: [error.message]
+			})
+		})
+	}
+	
+	fileDropZone = (props) => {
+				
+		const {acceptedFiles, fileRejections, getRootProps, getInputProps} = useDropzone({
+			accept: 'image/jpg, image/jpeg, image/png, image/gif, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			maxSize: 10485760,
+			onDropAccepted: acceptedFiles => {
+				if(this.state.attachments.length >= 2){
+					$('.fileRejectionErrorReason').html(" Maximum number of files attached.");
+					$('.fileRejectionError').fadeIn('fast').delay(2000).fadeOut('fast');
+				}else{
+					this.setState({
+						attachments: [...this.state.attachments, acceptedFiles[0]]
+					})
+					this.formData.attachmentData.append('attachments[]',acceptedFiles[0])
+				}				
+			},
+			onDropRejected: rejectedFiles => {
+				var response = "";
+				var errors = rejectedFiles[0].errors;
+				errors.forEach(function(error){
+					switch(error.code){
+						case "file-too-large":
+							response = response.concat(" File too large.");
+							break;
+						case "file-invalid-type":
+							response = response.concat(" Invalid file type.");
+							break;
+						default:
+							response = response.concat(" Invalid file.");
+					}
+				});
+				$('.fileRejectionErrorReason').html(response);
+				$('.fileRejectionError').fadeIn('fast').delay(2500).fadeOut('fast');
+			}
+		});
+				
+		const files = this.state.attachments.map((file,i) => (
+			<li key={file.path}>
+				<FontAwesomeIcon name="file-o" size="md" className={"drop-attachment-file"}/> {file.path.substring(0,33)} <FontAwesomeIcon name="trash-o" size="sm" className={"drop-attachment-trash"} onClick={
+					() => { 
+						var newAttachments = [...this.state.attachments];
+						newAttachments.splice(i,1);
+						this.setState({
+							attachments: newAttachments
+						})
+					}}/>
+			</li>
+		));
+		 
+		return ( 
+			<div>
+			   <label 
+					className={"secondary-text"}
+					style={{
+						marginTop: "1.5em"
+					}}
+				>
+					Add attachments if needed.
+				</label>
+				<div {...getRootProps({className: 'dropzone drop-attachment'})}>
+					<input {...getInputProps()} />
+					<FontAwesomeIcon name="copy" size="lg"/>
+					<br/><br/>
+					Drop to add attachment
+				</div>
+				<div>
+					<label 
+						className={"secondary-text"} 
+						style={{ 
+							fontSize: "0.65em"
+						}}
+					>
+						Allowed File Types: png, jpg, gif, doc, xls. Maximum of 2 files. Maximum 10MB size.
+					</label>
+				</div>
+				<div
+					style={{
+						marginTop: "0.5em"
+					}}
+				>
+					<ul className={"drop-attachment-files"}>{files}</ul>
+					<span 
+						className={"fileRejectionError"} 
+						style={{ 
+							display: "none",
+							color: "darkred"
+						}}
+					>
+						<FontAwesomeIcon name="exclamation-circle" size="md"/> Error uploading file -<span className={"fileRejectionErrorReason"}></span>
+					</span>
+				</div>			
+			</div>
+		);
+	}
+	
+	showAttachmentFiles = () => {
+		const files = this.state.attachments.map((file,i) => (
+			<div>
+				<FontAwesomeIcon name="file-o" size="md" className={"drop-attachment-file"}/> {file.path.substring(0,33)} <FontAwesomeIcon name="trash-o" size="sm" className={"drop-attachment-trash"} onClick={
+					() => { 
+						var newAttachments = [...this.state.attachments];
+						newAttachments.splice(i,1);
+						this.setState({
+							attachments: newAttachments
+						})
+					}}/>
+			</div>
+		));
+		
+		return (
+			<div style={{ marginTop: "1em" }}>
+				<label className="tiny secondary-text">Attachments</label>
+				<label>{files.length > 0 ? files : "-None-"}</label>
+			</div>
+		);
+	}
+	
 	render() {
 		let submitVerbiage = this.submitText()
 
@@ -1065,6 +1215,7 @@ class ContactUs extends React.Component {
 													}
 													placeholder="Providing a clear, concise description of the problem you're having helps us to better help you. Be sure to provide any context you think could be relevant. We appreciate you taking the time."
 												/>
+												<this.fileDropZone />
 												<div
 													className={
 														"row section text-right collapsible " +
@@ -1112,6 +1263,7 @@ class ContactUs extends React.Component {
 													<label className="tiny secondary-text">Description</label>
 													<label>{this.state.description}</label>
 												</div>
+												<this.showAttachmentFiles />																								
 												<div className="row section text-center">
 													<Button
 														variant="secondary"
