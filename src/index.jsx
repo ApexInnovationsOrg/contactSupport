@@ -180,7 +180,8 @@ class ContactUs extends React.Component {
 			this.rootSite = "https://www.apexinnovations.com";
 		}
 		if(window.location.host == 'local.apexinnovations.com'){
-			this.rootSite = "https://local.apexinnovations.com";			
+			this.rootSite = "https://local.apexinnovations.com";	
+			// this.rootSite = "https://www.apexinnovations.com";		
 		}
 	}
 
@@ -677,18 +678,19 @@ class ContactUs extends React.Component {
 					onClick={() => {
 						this.getNotices()
 						this.getCommonQuestions()
-
+						 
 						$("#customerSupportHelpModal").modal("toggle")
+						// console.log(document.getElementById('customerSupportHelpModal'));
 					}}
 					data-toggle="modal"
 				>
 					<FontAwesomeIcon className="visible-xs-inline-block" name="question-circle" size="lg" />
-					<span className="visible-sm-inline-block visible-md-inline-block visible-lg-inline-block">
+					<span className="visible-md-inline-block visible-lg-inline-block visible-xl-inline-block">
 						Need help?
 					</span>
 				</a>
 
-				<div id="customerSupportHelpModal" className="modal fade" role="dialog">
+				<div id="customerSupportHelpModal" className="modal" role="dialog">
 					<div className="modal-dialog">
 						<div className="modal-content">
 							<div className="modal-header">
@@ -1340,7 +1342,8 @@ class ContactUs extends React.Component {
 }
 
 window.lodash = _.noConflict()
-$(document).on("ready", function() {
+document.addEventListener("DOMContentLoaded", function() {
+	
 	if (window.location.href.indexOf("/admin") > -1) return
 	if (window.location.href.indexOf("/reports") > -1) return	
 	
@@ -1351,19 +1354,19 @@ $(document).on("ready", function() {
 			document.getElementById("customerSupportHelpButton").click()
 		}
 	}
-
+	
+	const contactUsDiv = document.createElement('div');
+	contactUsDiv.setAttribute('id','contactUsContainer');
+	document.body.appendChild(contactUsDiv);
 	ReactDOM.render(
 		<ContactUs />,
-		$("<div/>", {
-			id: "contactUsContainer"
-		})
-			.appendTo("body")
-			.get(0),
+		contactUsDiv,
 		function(){
-			if(window.location.href.indexOf("techSupport=1") > -1){
+			var lowercaseHref = window.location.href.toLowerCase();
+			var searchString = "techsupport=1";
+			if(lowercaseHref.includes(searchString)){
 				document.getElementById("customerSupportHelpButton").click()
 			}
 		}
-	)	
-
-})
+	)
+});
