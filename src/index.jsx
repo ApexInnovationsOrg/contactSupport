@@ -20,46 +20,46 @@ import "./styles.scss"
 class ContactUs extends React.Component {
 	constructor(props) {
 		super(props)
- 
+
 		let component = this
 
 		this.contactPreferences = [
-			{
-				key: "phone",
-				title: "Phone",
-				icon: "phone",
-				actionHeader: "We'll call you.",
-				// actionLabel: "within 10 minutes.",
-				disabledMessage: "Callback assistance is available M-F 8 am - 4 pm CST.",
-				condition: () => {
-					return true
-					// return !this.isAfterHours();
-				},
-				control: function(key) {
-					return (
-						<div
-							key={"phoneControlContainer_" + key}
-							className={component.state.contactPreference === this.key ? "" : "hidden"}
-						>
-							<label key={"phoneControlLabel_" + key} className="secondary-text">
-								Please provide a phone number where we can reach you.
-							</label>
-							<MaskedInput
-								key={"phoneControlInput_" + key}
-								mask="(111) 111-1111"
-								type="tel"
-								pattern="((\(\d{3}\) ?)|(\d{3}-))?\d{3}-\d{4}"
-								required
-								defaultValue={component.state.phoneNumber}
-								value={component.state.phoneNumber}
-								autoFocus
-								onChange={event => component.setState({ phoneNumber: event.target.value })}
-								placeholder="(555) 555-5555"
-							/>
-						</div>
-					)
-				}
-			},
+			// {
+			// 	key: "phone",
+			// 	title: "Phone",
+			// 	icon: "phone",
+			// 	actionHeader: "We'll call you.",
+			// 	// actionLabel: "within 10 minutes.",
+			// 	disabledMessage: "Callback assistance is available M-F 8 am - 4 pm CST.",
+			// 	condition: () => {
+			// 		return true
+			// 		// return !this.isAfterHours();
+			// 	},
+			// 	control: function(key) {
+			// 		return (
+			// 			<div
+			// 				key={"phoneControlContainer_" + key}
+			// 				className={component.state.contactPreference === this.key ? "" : "hidden"}
+			// 			>
+			// 				<label key={"phoneControlLabel_" + key} className="secondary-text">
+			// 					Please provide a phone number where we can reach you.
+			// 				</label>
+			// 				<MaskedInput
+			// 					key={"phoneControlInput_" + key}
+			// 					mask="(111) 111-1111"
+			// 					type="tel"
+			// 					pattern="((\(\d{3}\) ?)|(\d{3}-))?\d{3}-\d{4}"
+			// 					required
+			// 					defaultValue={component.state.phoneNumber}
+			// 					value={component.state.phoneNumber}
+			// 					autoFocus
+			// 					onChange={event => component.setState({ phoneNumber: event.target.value })}
+			// 					placeholder="(555) 555-5555"
+			// 				/>
+			// 			</div>
+			// 		)
+			// 	}
+			// },
 			{
 				key: "email",
 				title: "Email",
