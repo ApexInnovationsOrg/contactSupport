@@ -475,6 +475,7 @@ class ContactUs extends React.Component {
 			userName: userNameString,
 			userNameLink: userNameStringLink,
 			contactPreference: this.state.contactPreference,
+			phoneNumber: this.state.phoneNumber.replace(/[^0-9]/g, ""),
 			problemOverview:
 				(this.state.selectedIssue ? this.state.selectedIssue.value + " — " : "") + this.state.problemOverview,
 			description: this.state.description,
@@ -1028,6 +1029,7 @@ class ContactUs extends React.Component {
 												{/* user not logged in */}
 												{typeof user === "undefined" && (
 													<div>
+
 														<label className="secondary-text">
 															First things first: we need to know who you are!
 														</label>
@@ -1054,6 +1056,25 @@ class ContactUs extends React.Component {
 															onChange={event =>
 																this.setState({ lastName: event.target.value })
 															}
+														/>
+														
+														<br/>
+														<br/>
+														<label className="secondary-text">
+															(Optional) Want to provide a phone number?
+														</label>
+
+														<MaskedInput
+															key={"phoneControlInput"}
+															mask="(111) 111-1111"
+															type="tel"
+															pattern="((\(\d{3}\) ?)|(\d{3}-))?\d{3}-\d{4}"
+															required
+															defaultValue={this.state.phoneNumber}
+															value={this.state.phoneNumber}
+															autoFocus
+															onChange={event => this.setState({ phoneNumber: event.target.value })}
+															placeholder="(555) 555-5555"
 														/>
 													</div>
 												)}
